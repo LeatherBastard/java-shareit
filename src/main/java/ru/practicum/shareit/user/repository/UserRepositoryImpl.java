@@ -1,6 +1,7 @@
-package ru.practicum.shareit.user;
+package ru.practicum.shareit.user.repository;
 
 import org.springframework.stereotype.Repository;
+import ru.practicum.shareit.exception.EntityNotFoundException;
 import ru.practicum.shareit.user.model.User;
 
 import java.util.HashSet;
@@ -10,7 +11,9 @@ import java.util.stream.Collectors;
 
 @Repository
 public class UserRepositoryImpl implements UserRepository {
+    private static final String USER_NOT_FOUND_MESSAGE = "User with id %d not found";
     Set<User> repository = new HashSet<>();
+    private static int id = 1;
 
     @Override
     public List<User> getAll() {
@@ -24,11 +27,13 @@ public class UserRepositoryImpl implements UserRepository {
                 return user;
             }
         }
-        throw new UserNotFoundException();
+        throw new EntityNotFoundException(USER_NOT_FOUND_MESSAGE, id);
     }
 
     @Override
     public User add(User user) {
+        user.setId(id);
+        id++;
         repository.add(user);
         return getById(user.getId());
     }
@@ -44,5 +49,6 @@ public class UserRepositoryImpl implements UserRepository {
     @Override
     public void removeAll() {
         repository.clear();
+        id = 0;
     }
 }
