@@ -14,9 +14,9 @@ public interface ItemRepository {
 
     Item getById(Integer id);
 
-    Item add(Item item);
+    Item add(int ownerId, Item item);
 
-    Item update(Item item);
+    Item update(int ownerId, Item item);
 
     void removeAll();
 }

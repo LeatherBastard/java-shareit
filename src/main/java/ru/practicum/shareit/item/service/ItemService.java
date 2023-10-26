@@ -15,7 +15,7 @@ public interface ItemService {
 
     ItemDto getById(Integer id);
 
-    ItemDto add(ItemDto item);
+    ItemDto add(int ownerId, ItemDto item);
 
-    ItemDto update(ItemDto item);
+    ItemDto update(int ownerId, ItemDto item);
 }
