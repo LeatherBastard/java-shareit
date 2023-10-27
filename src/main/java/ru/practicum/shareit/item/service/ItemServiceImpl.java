@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ItemServiceImpl implements ItemService {
     private final ItemRepository repository;
+    private final UserRepository userRepository;
     private final ItemMapper mapper;
 
     @Override
@@ -38,12 +39,13 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemDto add(int ownerId, ItemDto item) {
+        userRepository.getById(ownerId);
         return mapper.mapToItemDto(repository.add(ownerId, mapper.mapToItem(item)));
     }
 
     @Override
-    public ItemDto update(int ownerId, ItemDto item) {
+    public ItemDto update(int ownerId, int itemId, ItemDto item) {
 
-        return mapper.mapToItemDto(repository.update(ownerId, mapper.mapToItem(item)));
+        return mapper.mapToItemDto(repository.update(ownerId, itemId, mapper.mapToItem(item)));
     }
 }

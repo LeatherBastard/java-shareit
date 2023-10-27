@@ -1,7 +1,6 @@
 package ru.practicum.shareit.item.repository;
 
 import ru.practicum.shareit.item.model.Item;
-import ru.practicum.shareit.user.model.User;
 
 import java.util.List;
 
@@ -16,7 +15,7 @@ public interface ItemRepository {
 
     Item add(int ownerId, Item item);
 
-    Item update(int ownerId, Item item);
+    Item update(int ownerId, int itemId, Item item);
 
     void removeAll();
 }

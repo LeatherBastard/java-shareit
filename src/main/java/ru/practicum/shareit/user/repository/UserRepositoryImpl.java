@@ -5,21 +5,19 @@ import ru.practicum.shareit.exception.DuplicateEmailException;
 import ru.practicum.shareit.exception.EntityNotFoundException;
 import ru.practicum.shareit.user.model.User;
 
-import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Repository
 public class UserRepositoryImpl implements UserRepository {
     private static final String USER_NOT_FOUND_MESSAGE = "User with id %d not found";
     private static final String DUPLICATE_EMAIL_MESSAGE = "User with this email already exists!";
-    Set<User> repository = new HashSet<>();
+    List<User> repository = new ArrayList<>();
     private static int id = 1;
 
     @Override
     public List<User> getAll() {
-        return repository.stream().collect(Collectors.toList());
+        return repository;
     }
 
     @Override
