@@ -35,7 +35,7 @@ public class UserRepositoryImpl implements UserRepository {
         if (isDuplicateEmail(user.getEmail()))
             throw new DuplicateEmailException(DUPLICATE_EMAIL_MESSAGE);
         user.setId(id);
-        id++;
+        incrementId();
         repository.add(user);
         return getById(user.getId());
     }
@@ -69,4 +69,10 @@ public class UserRepositoryImpl implements UserRepository {
         }
         return false;
     }
+
+    private static void incrementId() {
+        id++;
+    }
+
+
 }

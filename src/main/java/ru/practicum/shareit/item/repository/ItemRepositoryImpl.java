@@ -16,6 +16,7 @@ public class ItemRepositoryImpl implements ItemRepository {
     List<Item> repository = new ArrayList<>();
     private static int id = 1;
 
+
     @Override
     public List<Item> getAll() {
         return repository.stream().collect(Collectors.toList());
@@ -56,7 +57,7 @@ public class ItemRepositoryImpl implements ItemRepository {
     @Override
     public Item add(int ownerId, Item item) {
         item.setId(id);
-        id++;
+        incrementId();
         item.setOwnerId(ownerId);
         repository.add(item);
         return getById(item.getId());
@@ -81,6 +82,16 @@ public class ItemRepositoryImpl implements ItemRepository {
     @Override
     public void removeAll() {
         repository.clear();
-        id = 0;
+        clearId();
     }
+
+    private static void incrementId() {
+        id++;
+    }
+
+    private static void clearId() {
+        id = 1;
+    }
+
+
 }
