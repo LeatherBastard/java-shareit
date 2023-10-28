@@ -13,13 +13,13 @@ import java.util.stream.Collectors;
 public class ItemRepositoryImpl implements ItemRepository {
     private static final String ITEM_NOT_FOUND_MESSAGE = "Item with id %d not found";
     private static final String WRONG_OWNER_MESSAGE = "You are not an owner ot this item!";
-    List<Item> repository = new ArrayList<>();
+    private final List<Item> repository = new ArrayList<>();
     private static int id = 1;
 
 
     @Override
     public List<Item> getAll() {
-        return repository.stream().collect(Collectors.toList());
+        return repository;
     }
 
     @Override
@@ -29,19 +29,16 @@ public class ItemRepositoryImpl implements ItemRepository {
 
     @Override
     public List<Item> getAllByText(String text) {
-        List<Item> items;
-        if (text.isEmpty()) {
-            items = new ArrayList<>();
-        } else {
-            items = repository.stream()
-                    .filter(
-                            item -> (item.getName().toLowerCase().contains(text.toLowerCase())
-                                    || item.getDescription().toLowerCase().contains(text.toLowerCase()))
-                                    && item.getAvailable()
-                    )
-                    .collect(Collectors.toList());
-        }
-        return items;
+        if (text.isEmpty())
+            return new ArrayList<>();
+
+        return repository.stream()
+                .filter(
+                        item -> (item.getName().toLowerCase().contains(text.toLowerCase())
+                                || item.getDescription().toLowerCase().contains(text.toLowerCase()))
+                                && item.getAvailable()
+                )
+                .collect(Collectors.toList());
     }
 
     @Override

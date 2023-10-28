@@ -12,7 +12,7 @@ import java.util.List;
 public class UserRepositoryImpl implements UserRepository {
     private static final String USER_NOT_FOUND_MESSAGE = "User with id %d not found";
     private static final String DUPLICATE_EMAIL_MESSAGE = "User with this email already exists!";
-    List<User> repository = new ArrayList<>();
+    private final List<User> repository = new ArrayList<>();
     private static int id = 1;
 
     @Override
@@ -44,9 +44,8 @@ public class UserRepositoryImpl implements UserRepository {
     public User update(int id, User user) {
 
         User oldUser = getById(id);
-        if (!oldUser.getEmail().equals(user.getEmail()))
-            if (isDuplicateEmail(user.getEmail()))
-                throw new DuplicateEmailException(DUPLICATE_EMAIL_MESSAGE);
+        if (!oldUser.getEmail().equals(user.getEmail()) && isDuplicateEmail(user.getEmail()))
+            throw new DuplicateEmailException(DUPLICATE_EMAIL_MESSAGE);
         if (user.getName() != null)
             oldUser.setName(user.getName());
         if (user.getEmail() != null)
