@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 @Service
 @AllArgsConstructor
 public class UserServiceImpl implements UserService {
-    private static final String USER_NOT_FOUND_MESSAGE = "User with id %d not found";
+    public static final String USER_NOT_FOUND_MESSAGE = "User with id %d not found";
 
     private final UserRepository repository;
     private final UserMapper mapper;

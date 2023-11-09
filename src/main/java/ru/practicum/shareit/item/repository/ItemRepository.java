@@ -2,6 +2,7 @@ package ru.practicum.shareit.item.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.model.User;
 
@@ -14,12 +15,15 @@ public interface ItemRepository extends JpaRepository<Item, Integer> {
 
 
     @Query(
-            "select it " +
-                    "from Item as it " +
-                    "where lower(it.name) like lower(?1) " +
-                    "OR lower(it.description) like lower(?1)"
+            value = "select * " +
+                    "from items " +
+                    "where (lower(name) ilike %:text% " +
+                    "OR lower(description) ilike %:text%) " +
+                    "AND available=true"
+            ,
+            nativeQuery = true
     )
-    List<Item> findAllByText(String text);
+    List<Item> findAllByText(@Param("text") String text);
 
 
 }
