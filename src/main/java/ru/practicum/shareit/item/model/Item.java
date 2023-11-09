@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import ru.practicum.shareit.request.model.ItemRequest;
+import ru.practicum.shareit.user.model.User;
 
 import javax.persistence.*;
 
@@ -14,6 +15,8 @@ import javax.persistence.*;
 @Entity
 @Table(name = "items")
 public class Item {
+
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
@@ -23,11 +26,9 @@ public class Item {
     private String description;
     @Column(name = "available", nullable = false)
     private Boolean available;
-    @Column(name = "owner_id")
     @ManyToOne
     @JoinColumn(name = "user_id")
-    private int ownerId;
-    @Column(name = "request_id")
+    private User owner;
     @ManyToOne
     @JoinColumn(name = "request_id")
     private ItemRequest request;
