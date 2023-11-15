@@ -1,7 +1,10 @@
 package ru.practicum.shareit.item.mapper;
 
 import org.springframework.stereotype.Component;
+import ru.practicum.shareit.item.dto.CommentView;
+import ru.practicum.shareit.item.dto.ItemBookingDatesView;
 import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
 
 @Component
@@ -16,11 +19,30 @@ public class ItemMapper {
                 .build();
     }
 
+
+    public ItemBookingDatesView mapToItemBookingDatesView(Item item) {
+        return ItemBookingDatesView.builder()
+                .id(item.getId())
+                .name(item.getName())
+                .description(item.getDescription())
+                .available(item.getAvailable())
+                .request(item.getRequest() != null ? item.getRequest().getId() : null)
+                .build();
+    }
+
     public Item mapToItem(ItemDto itemDto) {
         Item item = new Item();
         item.setName(itemDto.getName());
         item.setDescription(itemDto.getDescription());
         item.setAvailable(itemDto.getAvailable());
         return item;
+    }
+
+    public CommentView mapToCommentView(Comment comment) {
+        return CommentView.builder()
+                .id(comment.getId())
+                .text(comment.getText())
+                .authorName(comment.getAuthor().getName())
+                .created(comment.getCreated()).build();
     }
 }

@@ -15,21 +15,23 @@ import javax.persistence.*;
 @Entity
 @Table(name = "items")
 public class Item {
-
-
+    @Column(name = "item_id")
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private Integer id;
     @Column(name = "name", nullable = false, length = 50)
     private String name;
     @Column(name = "description", length = 200)
     private String description;
     @Column(name = "available", nullable = false)
     private Boolean available;
-    @ManyToOne
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User owner;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "request_id")
     private ItemRequest request;
+
+
 }

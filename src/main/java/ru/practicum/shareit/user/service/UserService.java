@@ -8,12 +8,12 @@ public interface UserService {
 
     List<UserDto> getAll();
 
-    UserDto getById(int id);
+    UserDto getById(Integer id);
 
     UserDto add(UserDto user);
 
-    UserDto update(int id, UserDto user);
+    UserDto update(Integer id, UserDto user);
 
-    void remove(int id);
+    void remove(Integer id);
 
 }

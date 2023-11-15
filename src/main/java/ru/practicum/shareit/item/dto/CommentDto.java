@@ -3,21 +3,17 @@ package ru.practicum.shareit.item.dto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 
-
 @Data
 @AllArgsConstructor
 @Builder
-public class ItemDto {
-    private Integer id;
-    @NotEmpty
-    private String name;
-    @NotEmpty
-    private String description;
+@NoArgsConstructor
+public class CommentDto {
     @NotNull
-    private Boolean available;
-    private Integer request;
+    @NotEmpty
+    private String text;
 }
