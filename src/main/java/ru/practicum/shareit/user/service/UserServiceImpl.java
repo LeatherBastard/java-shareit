@@ -40,10 +40,8 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserDto update(Integer id, UserDto user) {
         User oldUser = mapper.mapToUser(getById(id));
-        if (user.getName() != null)
-            oldUser.setName(user.getName());
-        if (user.getEmail() != null)
-            oldUser.setEmail(user.getEmail());
+        oldUser.setName(user.getName());
+        oldUser.setEmail(user.getEmail());
         return mapper.mapToUserDto(repository.save(oldUser));
     }
 

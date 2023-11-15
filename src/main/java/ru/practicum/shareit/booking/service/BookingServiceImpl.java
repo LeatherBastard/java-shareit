@@ -64,7 +64,7 @@ public class BookingServiceImpl implements BookingService {
         }
 
 
-        if (optionalItem.get().getOwner().getId() == bookerId)
+        if (optionalItem.get().getOwner().getId().equals(bookerId))
             throw new BookingOwnerEqualsBookerException(BOOKING_OWNER_EQUALS_BOOKER_MESSAGE);
 
         if (bookingDto.getStart().equals(bookingDto.getEnd())) {
@@ -98,8 +98,8 @@ public class BookingServiceImpl implements BookingService {
         if (optionalBooking.isEmpty())
             throw new EntityNotFoundException(BOOKING_NOT_FOUND_MESSAGE, bookingId);
 
-        boolean isUserIdEqualsBookerOrItemOwnerId = optionalUser.get().getId() == optionalBooking.get().getBooker().getId() ||
-                optionalUser.get().getId() == optionalBooking.get().getItem().getOwner().getId();
+        boolean isUserIdEqualsBookerOrItemOwnerId = optionalUser.get().getId().equals(optionalBooking.get().getBooker().getId()) ||
+                optionalUser.get().getId().equals(optionalBooking.get().getItem().getOwner().getId());
 
         if (!isUserIdEqualsBookerOrItemOwnerId)
             throw new WrongOwnerOrBookerException(WRONG_OWNER_OR_BOOKER_MESSAGE);
@@ -220,7 +220,7 @@ public class BookingServiceImpl implements BookingService {
             throw new EntityNotFoundException(USER_NOT_FOUND_MESSAGE, userId);
         User owner = optionalUser.get();
 
-        if (oldBooking.getItem().getOwner().getId() != owner.getId()) {
+        if (!oldBooking.getItem().getOwner().getId().equals(owner.getId())) {
             throw new WrongOwnerOrBookerException(WRONG_OWNER_MESSAGE);
         }
 

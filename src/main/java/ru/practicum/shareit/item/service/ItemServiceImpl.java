@@ -84,7 +84,7 @@ public class ItemServiceImpl implements ItemService {
         Item itemById = optionalItem.get();
 
         ItemBookingDatesView result;
-        if (itemById.getOwner().getId() != userId) {
+        if (!itemById.getOwner().getId().equals(userId)) {
             result = itemMapper.mapToItemBookingDatesView(itemById);
         } else {
             result = setBookingDatesToItem(itemById);
@@ -138,15 +138,14 @@ public class ItemServiceImpl implements ItemService {
         if (optionalItem.isEmpty())
             throw new EntityNotFoundException(ITEM_NOT_FOUND_MESSAGE, itemId);
         Item oldItem = optionalItem.get();
-        if (oldItem.getOwner().getId() != ownerId) {
+        if (!oldItem.getOwner().getId().equals(ownerId)) {
             throw new WrongOwnerOrBookerException(WRONG_OWNER_MESSAGE);
         }
         if (item.getName() != null)
             oldItem.setName(item.getName());
         if (item.getDescription() != null)
             oldItem.setDescription(item.getDescription());
-        if (item.getAvailable() != null)
-            oldItem.setAvailable(item.getAvailable());
+        oldItem.setAvailable(item.getAvailable());
         return itemMapper.mapToItemDto(itemRepository.save(oldItem));
     }
 
