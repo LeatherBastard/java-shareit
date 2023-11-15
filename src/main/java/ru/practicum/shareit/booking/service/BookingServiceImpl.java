@@ -51,7 +51,7 @@ public class BookingServiceImpl implements BookingService {
     private final BookingMapper mapper;
 
     @Override
-    public BookingView add(int bookerId, BookingDto bookingDto) {
+    public BookingView add(Integer bookerId, BookingDto bookingDto) {
         Optional<User> optionalBooker = userRepository.findById(bookerId);
         if (optionalBooker.isEmpty())
             throw new EntityNotFoundException(USER_NOT_FOUND_MESSAGE, bookerId);
@@ -109,7 +109,7 @@ public class BookingServiceImpl implements BookingService {
 
 
     @Override
-    public List<BookingView> getAllByBooker(int bookerId, String state) {
+    public List<BookingView> getAllByBooker(Integer bookerId, String state) {
         Optional<User> optionalBooker = userRepository.findById(bookerId);
         if (optionalBooker.isEmpty())
             throw new EntityNotFoundException(USER_NOT_FOUND_MESSAGE, bookerId);
@@ -155,7 +155,7 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public List<BookingView> getAllByItemsOwner(int userId, String state) {
+    public List<BookingView> getAllByItemsOwner(Integer userId, String state) {
         Optional<User> optionalUser = userRepository.findById(userId);
         if (optionalUser.isEmpty())
             throw new EntityNotFoundException(USER_NOT_FOUND_MESSAGE, userId);
@@ -209,7 +209,7 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public BookingView updateBookingStatus(int userId, int bookingId, boolean approved) {
+    public BookingView updateBookingStatus(Integer userId, Integer bookingId, boolean approved) {
         Optional<Booking> optionalBooking = bookingRepository.findById(bookingId);
         if (optionalBooking.isEmpty())
             throw new EntityNotFoundException(BOOKING_NOT_FOUND_MESSAGE, bookingId);
