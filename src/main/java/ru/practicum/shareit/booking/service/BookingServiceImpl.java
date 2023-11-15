@@ -53,10 +53,10 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public BookingView add(int bookerId, BookingDto bookingDto) {
         Optional<User> optionalBooker = userRepository.findById(bookerId);
-        if (!optionalBooker.isPresent())
+        if (optionalBooker.isEmpty())
             throw new EntityNotFoundException(USER_NOT_FOUND_MESSAGE, bookerId);
         Optional<Item> optionalItem = itemRepository.findById(bookingDto.getItemId());
-        if (!optionalItem.isPresent())
+        if (optionalItem.isEmpty())
             throw new EntityNotFoundException(ITEM_NOT_FOUND_MESSAGE, bookingDto.getItemId());
         Item item = optionalItem.get();
         if (!item.getAvailable()) {
@@ -90,12 +90,12 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public BookingView getById(Integer userId, Integer bookingId) {
         Optional<User> optionalUser = userRepository.findById(userId);
-        if (!optionalUser.isPresent())
+        if (optionalUser.isEmpty())
             throw new EntityNotFoundException(USER_NOT_FOUND_MESSAGE, userId);
 
 
         Optional<Booking> optionalBooking = bookingRepository.findById(bookingId);
-        if (!optionalBooking.isPresent())
+        if (optionalBooking.isEmpty())
             throw new EntityNotFoundException(BOOKING_NOT_FOUND_MESSAGE, bookingId);
 
         boolean isUserIdEqualsBookerOrItemOwnerId = optionalUser.get().getId() == optionalBooking.get().getBooker().getId() ||
@@ -111,7 +111,7 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public List<BookingView> getAllByBooker(int bookerId, String state) {
         Optional<User> optionalBooker = userRepository.findById(bookerId);
-        if (!optionalBooker.isPresent())
+        if (optionalBooker.isEmpty())
             throw new EntityNotFoundException(USER_NOT_FOUND_MESSAGE, bookerId);
         List<BookingView> result;
         LocalDateTime now = LocalDateTime.now();
@@ -157,7 +157,7 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public List<BookingView> getAllByItemsOwner(int userId, String state) {
         Optional<User> optionalUser = userRepository.findById(userId);
-        if (!optionalUser.isPresent())
+        if (optionalUser.isEmpty())
             throw new EntityNotFoundException(USER_NOT_FOUND_MESSAGE, userId);
 
         List<Item> userItems = itemRepository.findAllByOwner(optionalUser.get());
@@ -211,12 +211,12 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public BookingView updateBookingStatus(int userId, int bookingId, boolean approved) {
         Optional<Booking> optionalBooking = bookingRepository.findById(bookingId);
-        if (!optionalBooking.isPresent())
+        if (optionalBooking.isEmpty())
             throw new EntityNotFoundException(BOOKING_NOT_FOUND_MESSAGE, bookingId);
         Booking oldBooking = optionalBooking.get();
 
         Optional<User> optionalUser = userRepository.findById(userId);
-        if (!optionalUser.isPresent())
+        if (optionalUser.isEmpty())
             throw new EntityNotFoundException(USER_NOT_FOUND_MESSAGE, userId);
         User owner = optionalUser.get();
 

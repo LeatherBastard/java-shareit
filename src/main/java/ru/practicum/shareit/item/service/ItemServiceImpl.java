@@ -111,10 +111,10 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public CommentView addComment(Integer userId, Integer itemId, CommentDto commentDto) {
         Optional<User> optionalUser = userRepository.findById(userId);
-        if (!optionalUser.isEmpty())
+        if (optionalUser.isEmpty())
             throw new EntityNotFoundException(USER_NOT_FOUND_MESSAGE, userId);
         Optional<Item> optionalItem = itemRepository.findById(itemId);
-        if (!optionalItem.isEmpty())
+        if (optionalItem.isEmpty())
             throw new EntityNotFoundException(ITEM_NOT_FOUND_MESSAGE, itemId);
 
         List<Booking> bookings = bookingRepository.findAllByBooker_IdAndItem_IdAndStatusAndEndIsBefore(userId, itemId, BookingStatus.APPROVED, LocalDateTime.now());
@@ -135,7 +135,7 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public ItemDto update(Integer ownerId, Integer itemId, ItemDto item) {
         Optional<Item> optionalItem = itemRepository.findById(itemId);
-        if (!optionalItem.isEmpty())
+        if (optionalItem.isEmpty())
             throw new EntityNotFoundException(ITEM_NOT_FOUND_MESSAGE, itemId);
         Item oldItem = optionalItem.get();
         if (oldItem.getOwner().getId() != ownerId) {
