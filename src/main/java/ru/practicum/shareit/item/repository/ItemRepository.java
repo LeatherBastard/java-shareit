@@ -18,9 +18,7 @@ public interface ItemRepository extends JpaRepository<Item, Integer> {
                     "from items " +
                     "where (lower(name) ilike %:text% " +
                     "OR lower(description) ilike %:text%) " +
-                    "AND available=true"
-            ,
-            nativeQuery = true
-    )
+                    "AND available=true",
+            nativeQuery = true)
     List<Item> findAllByText(@Param("text") String text);
 }
