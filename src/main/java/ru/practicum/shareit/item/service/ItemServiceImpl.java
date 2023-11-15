@@ -145,7 +145,8 @@ public class ItemServiceImpl implements ItemService {
             oldItem.setName(item.getName());
         if (item.getDescription() != null)
             oldItem.setDescription(item.getDescription());
-        oldItem.setAvailable(item.getAvailable());
+        if (item.getAvailable() != null)
+            oldItem.setAvailable(item.getAvailable());
         return itemMapper.mapToItemDto(itemRepository.save(oldItem));
     }
 
