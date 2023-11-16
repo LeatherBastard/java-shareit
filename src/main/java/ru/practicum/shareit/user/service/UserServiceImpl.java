@@ -25,7 +25,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserDto getById(Integer id) {
+    public UserDto getById(int id) {
         return mapper.mapToUserDto(
                 repository.findById(id)
                         .orElseThrow(() -> new EntityNotFoundException(USER_NOT_FOUND_MESSAGE, id))
@@ -38,7 +38,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserDto update(Integer id, UserDto user) {
+    public UserDto update(int id, UserDto user) {
         User oldUser = mapper.mapToUser(getById(id));
         if (user.getName() != null)
             oldUser.setName(user.getName());
@@ -48,7 +48,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void remove(Integer id) {
+    public void remove(int id) {
         User user = mapper.mapToUser(getById(id));
         repository.delete(user);
     }

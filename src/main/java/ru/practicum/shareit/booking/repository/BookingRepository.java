@@ -2,6 +2,7 @@ package ru.practicum.shareit.booking.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.BookingStatus;
 import ru.practicum.shareit.item.model.Item;
@@ -14,21 +15,21 @@ import java.util.Optional;
 public interface BookingRepository extends JpaRepository<Booking, Integer> {
 
 
-    List<Booking> findAllByBooker_IdAndItem_IdAndStatusAndEndIsBefore(Integer bookerId, Integer itemId, BookingStatus status, LocalDateTime end);
+    List<Booking> findAllByBooker_IdAndItem_IdAndStatusAndEndIsBefore(int bookerId, int itemId, BookingStatus status, LocalDateTime end);
+
+
+    @Query(value = "select *  " +
+            "from bookings as bk " +
+            "where bk.item_id=:itemId and bk.start_date=(select max(start_date) FROM bookings as bk " +
+            "where bk.item_id=:itemId and bk.start_date < CURRENT_TIMESTAMP and bk.status='APPROVED') ", nativeQuery = true)
+    Optional<Booking> findLastBookingDateForItem(@Param("itemId") int itemId);
 
 
     @Query(value = "select * " +
             "from bookings as bk " +
-            "where bk.item_id=? and bk.start_date  < CURRENT_TIMESTAMP and bk.status='APPROVED' " +
-            "order by bk.start_date desc limit 1", nativeQuery = true)
-    Optional<Booking> findLastBookingDateForItem(int itemId);
-
-
-    @Query(value = "select * " +
-            "from bookings as bk " +
-            "where bk.item_id=? and bk.start_date >= CURRENT_TIMESTAMP and bk.status='APPROVED' " +
-            "order by bk.start_date asc limit 1", nativeQuery = true)
-    Optional<Booking> findNextBookingDateForItem(int itemId);
+            "where bk.item_id=:itemId and bk.start_date=( select min (start_date) FROM bookings as bk " +
+            "where bk.item_id=:itemId and bk.start_date >= CURRENT_TIMESTAMP and bk.status='APPROVED') ", nativeQuery = true)
+    Optional<Booking> findNextBookingDateForItem(@Param("itemId") int itemId);
 
 
     List<Booking> findAllByBookerOrderByStartDesc(User booker);

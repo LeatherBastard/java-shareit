@@ -7,6 +7,6 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 @Builder
-public class UserBookingView {
+public class UserBookingDto {
     private Integer id;
 }

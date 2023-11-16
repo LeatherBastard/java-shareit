@@ -1,15 +1,13 @@
-package ru.practicum.shareit.item.dto;
+package ru.practicum.shareit.booking.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 
-
 @Data
 @AllArgsConstructor
 @Builder
-public class ItemBookingView {
+public class BookingItemDto {
     private Integer id;
-    private String name;
+    private Integer bookerId;
 }
-

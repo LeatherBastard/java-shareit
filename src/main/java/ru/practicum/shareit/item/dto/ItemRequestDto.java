@@ -3,16 +3,15 @@ package ru.practicum.shareit.item.dto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import ru.practicum.shareit.booking.dto.BookingItemView;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
-import java.util.Set;
+
 
 @Data
 @AllArgsConstructor
 @Builder
-public class ItemBookingDatesView {
+public class ItemRequestDto {
     private Integer id;
     @NotEmpty
     private String name;
@@ -21,8 +20,4 @@ public class ItemBookingDatesView {
     @NotNull
     private Boolean available;
     private Integer request;
-    private BookingItemView lastBooking;
-    private BookingItemView nextBooking;
-
-    private Set<CommentView> comments;
 }

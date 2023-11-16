@@ -2,8 +2,8 @@ package ru.practicum.shareit.booking.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import ru.practicum.shareit.booking.dto.BookingDto;
-import ru.practicum.shareit.booking.dto.BookingView;
+import ru.practicum.shareit.booking.dto.BookingRequestDto;
+import ru.practicum.shareit.booking.dto.BookingResponseDto;
 import ru.practicum.shareit.booking.mapper.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.BookingStatus;
@@ -51,13 +51,13 @@ public class BookingServiceImpl implements BookingService {
     private final BookingMapper mapper;
 
     @Override
-    public BookingView add(Integer bookerId, BookingDto bookingDto) {
+    public BookingResponseDto add(int bookerId, BookingRequestDto bookingRequestDto) {
         Optional<User> optionalBooker = userRepository.findById(bookerId);
         if (optionalBooker.isEmpty())
             throw new EntityNotFoundException(USER_NOT_FOUND_MESSAGE, bookerId);
-        Optional<Item> optionalItem = itemRepository.findById(bookingDto.getItemId());
+        Optional<Item> optionalItem = itemRepository.findById(bookingRequestDto.getItemId());
         if (optionalItem.isEmpty())
-            throw new EntityNotFoundException(ITEM_NOT_FOUND_MESSAGE, bookingDto.getItemId());
+            throw new EntityNotFoundException(ITEM_NOT_FOUND_MESSAGE, bookingRequestDto.getItemId());
         Item item = optionalItem.get();
         if (!item.getAvailable()) {
             throw new ItemUnavailableException(ITEM_NOT_AVAILABLE_MESSAGE, item.getId());
@@ -67,20 +67,20 @@ public class BookingServiceImpl implements BookingService {
         if (optionalItem.get().getOwner().getId().equals(bookerId))
             throw new BookingOwnerEqualsBookerException(BOOKING_OWNER_EQUALS_BOOKER_MESSAGE);
 
-        if (bookingDto.getStart().equals(bookingDto.getEnd())) {
+        if (bookingRequestDto.getStart().equals(bookingRequestDto.getEnd())) {
             throw new BookingDateValidationException(START_DATE_EQUALS_END_DATE_MESSAGE);
         }
-        if (bookingDto.getStart().isBefore(LocalDateTime.now())) {
+        if (bookingRequestDto.getStart().isBefore(LocalDateTime.now())) {
             throw new BookingDateValidationException(START_DATE_BEFORE_CURRENT_DATE_MESSAGE);
         }
-        if (bookingDto.getEnd().isBefore(LocalDateTime.now())) {
+        if (bookingRequestDto.getEnd().isBefore(LocalDateTime.now())) {
             throw new BookingDateValidationException(END_DATE_BEFORE_CURRENT_DATE_MESSAGE);
         }
-        if (bookingDto.getEnd().isBefore(bookingDto.getStart())) {
+        if (bookingRequestDto.getEnd().isBefore(bookingRequestDto.getStart())) {
             throw new BookingDateValidationException(END_DATE_BEFORE_START_DATE_MESSAGE);
         }
 
-        Booking booking = mapper.mapToBooking(bookingDto);
+        Booking booking = mapper.mapToBooking(bookingRequestDto);
         booking.setItem(optionalItem.get());
         booking.setBooker(optionalBooker.get());
         booking.setStatus(BookingStatus.WAITING);
@@ -88,7 +88,7 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public BookingView getById(Integer userId, Integer bookingId) {
+    public BookingResponseDto getById(int userId, int bookingId) {
         Optional<User> optionalUser = userRepository.findById(userId);
         if (optionalUser.isEmpty())
             throw new EntityNotFoundException(USER_NOT_FOUND_MESSAGE, userId);
@@ -109,107 +109,88 @@ public class BookingServiceImpl implements BookingService {
 
 
     @Override
-    public List<BookingView> getAllByBooker(Integer bookerId, String state) {
+    public List<BookingResponseDto> getAllByBooker(int bookerId, String state) {
         Optional<User> optionalBooker = userRepository.findById(bookerId);
         if (optionalBooker.isEmpty())
             throw new EntityNotFoundException(USER_NOT_FOUND_MESSAGE, bookerId);
-        List<BookingView> result;
+        List<Booking> result;
         LocalDateTime now = LocalDateTime.now();
         switch (state) {
             case "ALL":
                 result = bookingRepository
-                        .findAllByBookerOrderByStartDesc(optionalBooker.get())
-                        .stream().map(mapper::mapToBookingView)
-                        .collect(Collectors.toList());
+                        .findAllByBookerOrderByStartDesc(optionalBooker.get());
                 break;
             case "CURRENT":
                 result = bookingRepository
-                        .findAllByBooker_IdAndStartLessThanEqualAndEndGreaterThanOrderByStartDesc(bookerId, now, now)
-                        .stream().map(mapper::mapToBookingView)
-                        .collect(Collectors.toList());
+                        .findAllByBooker_IdAndStartLessThanEqualAndEndGreaterThanOrderByStartDesc(bookerId, now, now);
                 break;
             case "PAST":
                 result = bookingRepository
-                        .findAllByBooker_IdAndEndLessThanOrderByStartDesc(bookerId, now)
-                        .stream().map(mapper::mapToBookingView)
-                        .collect(Collectors.toList());
+                        .findAllByBooker_IdAndEndLessThanOrderByStartDesc(bookerId, now);
                 break;
             case "FUTURE":
                 result = bookingRepository
-                        .findAllFutureBookingsByUser(bookerId)
-                        .stream().map(mapper::mapToBookingView)
-                        .collect(Collectors.toList());
+                        .findAllFutureBookingsByUser(bookerId);
                 break;
             case "WAITING":
             case "REJECTED":
                 result = bookingRepository
-                        .findAllByBookerAndStatusOrderByStartDesc(optionalBooker.get(), BookingStatus.valueOf(state))
-                        .stream().map(mapper::mapToBookingView)
-                        .collect(Collectors.toList());
+                        .findAllByBookerAndStatusOrderByStartDesc(optionalBooker.get(), BookingStatus.valueOf(state));
                 break;
             default:
                 throw new UnsupportedStatusException(STATUS_NOT_SUPPORTED_MESSAGE, state);
         }
 
-        return result;
+        return result.stream().map(mapper::mapToBookingView)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public List<BookingView> getAllByItemsOwner(Integer userId, String state) {
+    public List<BookingResponseDto> getAllByItemsOwner(int userId, String state) {
         Optional<User> optionalUser = userRepository.findById(userId);
         if (optionalUser.isEmpty())
             throw new EntityNotFoundException(USER_NOT_FOUND_MESSAGE, userId);
 
         List<Item> userItems = itemRepository.findAllByOwner(optionalUser.get());
 
-        List<BookingView> result;
+        List<Booking> result;
         LocalDateTime now = LocalDateTime.now();
         switch (state) {
             case "ALL":
                 result = userItems.stream()
                         .map(bookingRepository::findAllByItemOrderByStartDesc)
-                        .flatMap(Collection::stream)
-                        .map(mapper::mapToBookingView)
-                        .collect(Collectors.toList());
+                        .flatMap(Collection::stream).collect(Collectors.toList());
                 break;
             case "CURRENT":
                 result = userItems.stream()
                         .map(item -> bookingRepository.findAllByItem_IdAndStartLessThanEqualAndEndGreaterThanOrderByStartDesc(item.getId(), now, now))
-                        .flatMap(Collection::stream)
-                        .map(mapper::mapToBookingView)
-                        .collect(Collectors.toList());
+                        .flatMap(Collection::stream).collect(Collectors.toList());
                 break;
             case "PAST":
                 result = userItems.stream()
                         .map(item -> bookingRepository.findAllByItem_IdAndEndLessThanOrderByStartDesc(item.getId(), now))
-                        .flatMap(Collection::stream)
-                        .map(mapper::mapToBookingView)
-                        .collect(Collectors.toList());
+                        .flatMap(Collection::stream).collect(Collectors.toList());
                 break;
             case "FUTURE":
                 result = userItems.stream()
                         .map(item -> bookingRepository.findAllFutureBookingsByItem(item.getId()))
-                        .flatMap(Collection::stream)
-                        .map(mapper::mapToBookingView)
-                        .collect(Collectors.toList());
+                        .flatMap(Collection::stream).collect(Collectors.toList());
                 break;
             case "WAITING":
             case "REJECTED":
                 result = userItems.stream()
                         .map(item -> bookingRepository.findAllByItemAndStatusOrderByStartDesc(item, BookingStatus.valueOf(state)))
-                        .flatMap(Collection::stream)
-                        .map(mapper::mapToBookingView)
-                        .collect(Collectors.toList());
+                        .flatMap(Collection::stream).collect(Collectors.toList());
                 break;
             default:
                 throw new UnsupportedStatusException(STATUS_NOT_SUPPORTED_MESSAGE, state);
         }
-
-        return result;
+        return result.stream().map(mapper::mapToBookingView)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public BookingView updateBookingStatus(Integer userId, Integer bookingId, boolean approved) {
+    public BookingResponseDto updateBookingStatus(int userId, int bookingId, boolean approved) {
         Optional<Booking> optionalBooking = bookingRepository.findById(bookingId);
         if (optionalBooking.isEmpty())
             throw new EntityNotFoundException(BOOKING_NOT_FOUND_MESSAGE, bookingId);

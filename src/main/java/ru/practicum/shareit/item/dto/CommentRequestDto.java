@@ -12,7 +12,7 @@ import javax.validation.constraints.NotNull;
 @AllArgsConstructor
 @Builder
 @NoArgsConstructor
-public class CommentDto {
+public class CommentRequestDto {
     @NotNull
     @NotEmpty
     private String text;
