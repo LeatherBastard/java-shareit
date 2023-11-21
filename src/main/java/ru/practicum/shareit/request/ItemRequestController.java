@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.request.dto.ItemRequestDto;
 import ru.practicum.shareit.request.dto.ItemRequestResponseDto;
+import ru.practicum.shareit.request.service.ItemRequestService;
 
 import javax.validation.Valid;
 import java.util.List;
@@ -19,10 +20,11 @@ import java.util.List;
 public class ItemRequestController {
 
     private static final String USER_ID_REQUEST_HEADER = "X-Sharer-User-Id";
+    private final ItemRequestService itemRequestService;
 
     @PostMapping
     public ItemRequestResponseDto addItemRequest(@RequestHeader(USER_ID_REQUEST_HEADER) int userId, @Valid @RequestBody ItemRequestDto itemRequestDto) {
-
+        return itemRequestService.addItemRequest(userId, itemRequestDto);
     }
 
     @GetMapping
@@ -37,7 +39,7 @@ public class ItemRequestController {
 
     @GetMapping("/{requestId}")
     public ItemRequestResponseDto getItemRequest(@PathVariable int requestId) {
-
+        return itemRequestService.getItemRequest(requestId);
     }
 
 
