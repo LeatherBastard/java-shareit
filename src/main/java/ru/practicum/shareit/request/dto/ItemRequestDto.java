@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import ru.practicum.shareit.user.model.User;
 
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
 /**
@@ -12,8 +14,7 @@ import java.time.LocalDateTime;
 @Data
 @AllArgsConstructor
 public class ItemRequestDto {
-    private int id;
+    @NotNull
+    @NotEmpty
     private String description;
-    private User requestor;
-    private LocalDateTime created;
 }
