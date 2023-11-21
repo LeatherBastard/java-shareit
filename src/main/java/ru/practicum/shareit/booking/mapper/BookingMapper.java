@@ -1,29 +1,55 @@
 package ru.practicum.shareit.booking.mapper;
 
 
-import ru.practicum.shareit.booking.dto.BookingDto;
+import org.springframework.stereotype.Component;
+import ru.practicum.shareit.booking.dto.BookingRequestDto;
+import ru.practicum.shareit.booking.dto.BookingItemDto;
+import ru.practicum.shareit.booking.dto.BookingResponseDto;
 import ru.practicum.shareit.booking.model.Booking;
+import ru.practicum.shareit.item.dto.ItemBookingDto;
+import ru.practicum.shareit.user.dto.UserBookingDto;
 
+@Component
 public class BookingMapper {
-    public BookingDto mapToBookingDto(Booking booking) {
-        return new BookingDto(
-                booking.getId(),
-                booking.getStart(),
-                booking.getEnd(),
-                booking.getItem(),
-                booking.getBooker(),
-                booking.getStatus()
-        );
+    public BookingRequestDto mapToBookingDto(Booking booking) {
+        return BookingRequestDto.builder()
+                .id(booking.getId())
+                .start(booking.getStart())
+                .end(booking.getEnd())
+                .itemId(booking.getItem().getId())
+                .build();
     }
 
-    public Booking mapToBooking(BookingDto bookingDto) {
-        return new Booking(
-                bookingDto.getId(),
-                bookingDto.getStart(),
-                bookingDto.getEnd(),
-                bookingDto.getItem(),
-                bookingDto.getBooker(),
-                bookingDto.getStatus()
-        );
+    public BookingResponseDto mapToBookingView(Booking booking) {
+        return BookingResponseDto.builder()
+                .id(booking.getId())
+                .start(booking.getStart())
+                .end(booking.getEnd())
+                .itemId(booking.getItem().getId())
+                .status(booking.getStatus().name())
+                .item(
+                        ItemBookingDto.builder()
+                                .id(booking.getItem().getId())
+                                .name(booking.getItem().getName()).build()
+                )
+                .booker(UserBookingDto.builder().id(booking.getBooker().getId()).build())
+                .build();
+    }
+
+
+    public BookingItemDto mapToBookingItemView(Booking booking) {
+        return BookingItemDto.builder()
+                .id(booking.getId())
+                .bookerId(booking.getBooker().getId())
+                .build();
+    }
+
+
+    public Booking mapToBooking(BookingRequestDto bookingRequestDto) {
+        return Booking.builder()
+                .id(bookingRequestDto.getId())
+                .start(bookingRequestDto.getStart())
+                .end(bookingRequestDto.getEnd())
+                .build();
     }
 }
