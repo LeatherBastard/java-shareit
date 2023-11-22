@@ -21,4 +21,6 @@ public interface ItemRepository extends JpaRepository<Item, Integer> {
                     "AND available=true",
             nativeQuery = true)
     List<Item> findAllByText(@Param("text") String text);
+
+    List<Item> findAllByRequest_Id(int requestId);
 }

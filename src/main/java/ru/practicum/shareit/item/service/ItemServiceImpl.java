@@ -18,6 +18,9 @@ import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.CommentRepository;
 import ru.practicum.shareit.item.repository.ItemRepository;
+import ru.practicum.shareit.request.model.ItemRequest;
+import ru.practicum.shareit.request.repository.ItemRequestRepository;
+import ru.practicum.shareit.request.service.ItemRequestService;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
@@ -28,6 +31,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static ru.practicum.shareit.user.service.UserServiceImpl.USER_NOT_FOUND_MESSAGE;
+import static ru.practicum.shareit.request.service.ItemRequestServiceImpl.ITEM_REQUEST_NOT_FOUND_MESSAGE;
 
 @Service
 @RequiredArgsConstructor
@@ -41,6 +45,7 @@ public class ItemServiceImpl implements ItemService {
     private final UserRepository userRepository;
     private final CommentRepository commentRepository;
     private final BookingRepository bookingRepository;
+    private final ItemRequestRepository itemRequestRepository;
     private final ItemMapper itemMapper;
     private final BookingMapper bookingMapper;
 
@@ -105,6 +110,14 @@ public class ItemServiceImpl implements ItemService {
             throw new EntityNotFoundException(USER_NOT_FOUND_MESSAGE, ownerId);
         Item item = itemMapper.mapToItem(itemRequestDto);
         item.setOwner(optionalUser.get());
+        if (itemRequestDto.getRequestId() != null) {
+            int requestId = itemRequestDto.getRequestId();
+            Optional<ItemRequest> optionalItemRequest = itemRequestRepository.findById(requestId);
+            if (optionalItemRequest.isEmpty())
+                throw new EntityNotFoundException(ITEM_REQUEST_NOT_FOUND_MESSAGE, requestId);
+            item.setRequest(optionalItemRequest.get());
+        }
+
         return itemMapper.mapToItemDto(itemRepository.save(item));
     }
 

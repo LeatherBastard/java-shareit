@@ -63,7 +63,6 @@ public class BookingServiceImpl implements BookingService {
             throw new ItemUnavailableException(ITEM_NOT_AVAILABLE_MESSAGE, item.getId());
         }
 
-
         if (optionalItem.get().getOwner().getId().equals(bookerId))
             throw new BookingOwnerEqualsBookerException(BOOKING_OWNER_EQUALS_BOOKER_MESSAGE);
 

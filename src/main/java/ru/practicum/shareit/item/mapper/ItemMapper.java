@@ -15,7 +15,7 @@ public class ItemMapper {
                 .name(item.getName())
                 .description(item.getDescription())
                 .available(item.getAvailable())
-                .request(item.getRequest() != null ? item.getRequest().getId() : null)
+                .requestId(item.getRequest() != null ? item.getRequest().getId() : null)
                 .build();
     }
 
@@ -37,6 +37,7 @@ public class ItemMapper {
         item.setAvailable(itemRequestDto.getAvailable());
         return item;
     }
+
 
     public CommentResponseDto mapToCommentView(Comment comment) {
         return CommentResponseDto.builder()
