@@ -6,9 +6,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exception.EntityNotFoundException;
-import ru.practicum.shareit.item.dto.ItemRequestDto;
+import ru.practicum.shareit.exception.PaginationBoundariesException;
 import ru.practicum.shareit.item.mapper.ItemMapper;
-import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.request.dto.ItemRequestRequestDto;
 import ru.practicum.shareit.request.dto.ItemRequestResponseDto;
@@ -31,6 +30,7 @@ import static ru.practicum.shareit.user.service.UserServiceImpl.USER_NOT_FOUND_M
 public class ItemRequestServiceImpl implements ItemRequestService {
 
     public static final String ITEM_REQUEST_NOT_FOUND_MESSAGE = "Item request with id %d not found";
+    private static final String SORT_CREATED_PROPERTY = "created";
 
     private final ItemRequestRepository itemRequestRepository;
     private final UserRepository userRepository;
@@ -62,11 +62,14 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     }
 
     public List<ItemRequestResponseDto> getAllUsersItemRequest(int userId, int from, int size) {
+        if (from < 0 || size <= 0) {
+            throw new PaginationBoundariesException(from, size);
+        }
         BooleanExpression notByUserId = QItemRequest.itemRequest.requestor.id.notIn(userId);
-        Sort sort = Sort.by("created").descending();
+        Sort sort = Sort.by(SORT_CREATED_PROPERTY).descending();
         PageRequest pageRequest = PageRequest.of(from, size, sort);
         Iterable<ItemRequest> iterableItemRequests = itemRequestRepository.findAll(notByUserId, pageRequest);
-        List<ItemRequestResponseDto> itemRequests = itemRequestMapper.mapToItemDto(iterableItemRequests);
+        List<ItemRequestResponseDto> itemRequests = itemRequestMapper.mapToItemRequestsDto(iterableItemRequests);
         setItemsToItemRequests(itemRequests);
         return itemRequests;
 

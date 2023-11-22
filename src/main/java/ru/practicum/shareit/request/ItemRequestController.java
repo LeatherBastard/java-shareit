@@ -10,14 +10,14 @@ import ru.practicum.shareit.request.service.ItemRequestService;
 import javax.validation.Valid;
 import java.util.List;
 
-/**
- * TODO Sprint add-item-requests.
- */
+
 @RestController
 @Slf4j
 @RequestMapping(path = "/requests")
 @RequiredArgsConstructor
 public class ItemRequestController {
+
+    //@TODO Добавить логер в методы
 
     private static final String USER_ID_REQUEST_HEADER = "X-Sharer-User-Id";
     private final ItemRequestService itemRequestService;
@@ -33,13 +33,13 @@ public class ItemRequestController {
     }
 
     @GetMapping("/all")
-    public List<ItemRequestResponseDto> getAllUsersItemRequests(@RequestHeader(USER_ID_REQUEST_HEADER) int userId, @RequestParam int from, @RequestParam int size) {
-        return itemRequestService.getAllUsersItemRequest( userId, from, size);
+    public List<ItemRequestResponseDto> getAllUsersItemRequests(@RequestHeader(USER_ID_REQUEST_HEADER) int userId, @RequestParam(defaultValue = "0") int from, @RequestParam(defaultValue = "20") int size) {
+        return itemRequestService.getAllUsersItemRequest(userId, from, size);
     }
 
     @GetMapping("/{requestId}")
-    public ItemRequestResponseDto getItemRequest(@RequestHeader(USER_ID_REQUEST_HEADER) int userId,@PathVariable int requestId) {
-        return itemRequestService.getItemRequest(userId,requestId);
+    public ItemRequestResponseDto getItemRequest(@RequestHeader(USER_ID_REQUEST_HEADER) int userId, @PathVariable int requestId) {
+        return itemRequestService.getItemRequest(userId, requestId);
     }
 
 }

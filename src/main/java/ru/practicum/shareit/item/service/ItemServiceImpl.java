@@ -1,6 +1,8 @@
 package ru.practicum.shareit.item.service;
 
+import com.querydsl.core.types.dsl.BooleanExpression;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.booking.mapper.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
@@ -8,19 +10,20 @@ import ru.practicum.shareit.booking.model.BookingStatus;
 import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.exception.BookingForCommentNotFoundException;
 import ru.practicum.shareit.exception.EntityNotFoundException;
+import ru.practicum.shareit.exception.PaginationBoundariesException;
 import ru.practicum.shareit.exception.WrongOwnerOrBookerException;
 import ru.practicum.shareit.item.dto.CommentRequestDto;
 import ru.practicum.shareit.item.dto.CommentResponseDto;
-import ru.practicum.shareit.item.dto.ItemResponseDto;
 import ru.practicum.shareit.item.dto.ItemRequestDto;
+import ru.practicum.shareit.item.dto.ItemResponseDto;
 import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.item.model.QItem;
 import ru.practicum.shareit.item.repository.CommentRepository;
 import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.request.model.ItemRequest;
 import ru.practicum.shareit.request.repository.ItemRequestRepository;
-import ru.practicum.shareit.request.service.ItemRequestService;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
@@ -30,8 +33,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static ru.practicum.shareit.user.service.UserServiceImpl.USER_NOT_FOUND_MESSAGE;
 import static ru.practicum.shareit.request.service.ItemRequestServiceImpl.ITEM_REQUEST_NOT_FOUND_MESSAGE;
+import static ru.practicum.shareit.user.service.UserServiceImpl.USER_NOT_FOUND_MESSAGE;
 
 @Service
 @RequiredArgsConstructor
@@ -56,11 +59,19 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public List<ItemResponseDto> getAllByOwner(int ownerId) {
+    public List<ItemResponseDto> getAllByOwner(int ownerId, int from, int size) {
+        if (from < 0 || size <= 0) {
+            throw new PaginationBoundariesException(from, size);
+        }
         Optional<User> optionalUser = userRepository.findById(ownerId);
         if (optionalUser.isEmpty())
             throw new EntityNotFoundException(USER_NOT_FOUND_MESSAGE, ownerId);
-        List<Item> ownerItems = itemRepository.findAllByOwner(optionalUser.get());
+        BooleanExpression byOwnerId = QItem.item.owner.id.eq(ownerId);
+        PageRequest pageRequest = PageRequest.of(from, size);
+
+        Iterable<Item> iterableItems = itemRepository.findAll(byOwnerId, pageRequest);
+
+        List<Item> ownerItems = itemMapper.mapToItemsFromIterable(iterableItems);
         List<ItemResponseDto> items = ownerItems.stream()
                 .map(this::setBookingDatesToItem).collect(Collectors.toList());
         items.forEach(item ->
@@ -75,10 +86,23 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public List<ItemRequestDto> getAllByText(String text) {
+    public List<ItemRequestDto> getAllByText(String text, int from, int size) {
+
+        if (from < 0 || size <= 0) {
+            throw new PaginationBoundariesException(from, size);
+        }
         if (text.isEmpty())
             return new ArrayList<>();
-        return itemRepository.findAllByText(text).stream().map(itemMapper::mapToItemDto).collect(Collectors.toList());
+
+        BooleanExpression byName = QItem.item.name.containsIgnoreCase(text);
+        BooleanExpression byDescription = QItem.item.description.containsIgnoreCase(text);
+        BooleanExpression byAvailable = QItem.item.available.isTrue();
+        PageRequest pageRequest = PageRequest.of(from, size);
+        Iterable<Item> itemsByText = itemRepository.findAll(byAvailable.andAnyOf(byName.or(byDescription)), pageRequest);
+        return itemMapper.mapToItemsFromIterable(itemsByText)
+                .stream()
+                .map(itemMapper::mapToItemDto)
+                .collect(Collectors.toList());
     }
 
     @Override

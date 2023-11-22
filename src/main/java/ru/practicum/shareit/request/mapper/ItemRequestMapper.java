@@ -25,7 +25,7 @@ public class ItemRequestMapper {
                 .build();
     }
 
-    public List<ItemRequestResponseDto> mapToItemDto(Iterable<ItemRequest> itemRequests) {
+    public List<ItemRequestResponseDto> mapToItemRequestsDto(Iterable<ItemRequest> itemRequests) {
         List<ItemRequestResponseDto> dtos = new ArrayList<>();
         for (ItemRequest itemRequest : itemRequests) {
             dtos.add(mapToItemRequestDto(itemRequest));
