@@ -30,7 +30,6 @@ import static ru.practicum.shareit.user.service.UserServiceImpl.USER_NOT_FOUND_M
 public class ItemRequestServiceImpl implements ItemRequestService {
 
     public static final String ITEM_REQUEST_NOT_FOUND_MESSAGE = "Item request with id %d not found";
-    private static final String SORT_CREATED_PROPERTY = "created";
 
     private final ItemRequestRepository itemRequestRepository;
     private final UserRepository userRepository;
@@ -66,7 +65,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
             throw new PaginationBoundariesException(from, size);
         }
         BooleanExpression notByUserId = QItemRequest.itemRequest.requestor.id.notIn(userId);
-        Sort sort = Sort.by(SORT_CREATED_PROPERTY).descending();
+        Sort sort = Sort.by("created").descending();
         PageRequest pageRequest = PageRequest.of(from, size, sort);
         Iterable<ItemRequest> iterableItemRequests = itemRequestRepository.findAll(notByUserId, pageRequest);
         List<ItemRequestResponseDto> itemRequests = itemRequestMapper.mapToItemRequestsDto(iterableItemRequests);
