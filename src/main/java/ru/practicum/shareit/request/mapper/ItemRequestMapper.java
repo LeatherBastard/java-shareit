@@ -6,8 +6,6 @@ import ru.practicum.shareit.request.dto.ItemRequestRequestDto;
 import ru.practicum.shareit.request.dto.ItemRequestResponseDto;
 import ru.practicum.shareit.request.model.ItemRequest;
 
-import java.util.ArrayList;
-import java.util.List;
 
 @Component
 public class ItemRequestMapper {
@@ -25,11 +23,4 @@ public class ItemRequestMapper {
                 .build();
     }
 
-    public List<ItemRequestResponseDto> mapToItemRequestsDto(Iterable<ItemRequest> itemRequests) {
-        List<ItemRequestResponseDto> dtos = new ArrayList<>();
-        for (ItemRequest itemRequest : itemRequests) {
-            dtos.add(mapToItemRequestDto(itemRequest));
-        }
-        return dtos;
-    }
 }

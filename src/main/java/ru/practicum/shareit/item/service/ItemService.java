@@ -12,7 +12,7 @@ public interface ItemService {
 
     List<ItemResponseDto> getAllByOwner(int ownerId, int from, int size);
 
-    List<ItemRequestDto> getAllByText(String text,int from, int size);
+    List<ItemRequestDto> getAllByText(String text, int from, int size);
 
     ItemResponseDto getById(int userId, int id);
 

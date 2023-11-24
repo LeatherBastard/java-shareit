@@ -2,15 +2,13 @@ package ru.practicum.shareit.booking.mapper;
 
 
 import org.springframework.stereotype.Component;
-import ru.practicum.shareit.booking.dto.BookingRequestDto;
 import ru.practicum.shareit.booking.dto.BookingItemDto;
+import ru.practicum.shareit.booking.dto.BookingRequestDto;
 import ru.practicum.shareit.booking.dto.BookingResponseDto;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.item.dto.ItemBookingDto;
 import ru.practicum.shareit.user.dto.UserBookingDto;
 
-import java.util.ArrayList;
-import java.util.List;
 
 @Component
 public class BookingMapper {
@@ -56,11 +54,4 @@ public class BookingMapper {
                 .build();
     }
 
-    public List<Booking> mapToBookingsFromIterable(Iterable<Booking> iterableBooking) {
-        List<Booking> bookings = new ArrayList<>();
-        for (Booking booking : iterableBooking) {
-            bookings.add(booking);
-        }
-        return bookings;
-    }
 }

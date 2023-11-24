@@ -7,9 +7,6 @@ import ru.practicum.shareit.item.dto.ItemResponseDto;
 import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @Component
 public class ItemMapper {
     public ItemRequestDto mapToItemDto(Item item) {
@@ -21,7 +18,6 @@ public class ItemMapper {
                 .requestId(item.getRequest() != null ? item.getRequest().getId() : null)
                 .build();
     }
-
 
     public ItemResponseDto mapToItemBookingDatesView(Item item) {
         return ItemResponseDto.builder()
@@ -41,21 +37,12 @@ public class ItemMapper {
         return item;
     }
 
-
     public CommentResponseDto mapToCommentView(Comment comment) {
         return CommentResponseDto.builder()
                 .id(comment.getId())
                 .text(comment.getText())
                 .authorName(comment.getAuthor().getName())
                 .created(comment.getCreated()).build();
-    }
-
-    public List<Item> mapToItemsFromIterable(Iterable<Item> iterableItems) {
-        List<Item> items = new ArrayList<>();
-        for (Item item : iterableItems) {
-            items.add(item);
-        }
-        return items;
     }
 
 }

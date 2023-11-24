@@ -1,9 +1,6 @@
 package ru.practicum.shareit.request.service;
 
-import com.querydsl.core.types.dsl.BooleanExpression;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exception.EntityNotFoundException;
 import ru.practicum.shareit.exception.PaginationBoundariesException;
@@ -13,7 +10,6 @@ import ru.practicum.shareit.request.dto.ItemRequestRequestDto;
 import ru.practicum.shareit.request.dto.ItemRequestResponseDto;
 import ru.practicum.shareit.request.mapper.ItemRequestMapper;
 import ru.practicum.shareit.request.model.ItemRequest;
-import ru.practicum.shareit.request.model.QItemRequest;
 import ru.practicum.shareit.request.repository.ItemRequestRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
@@ -64,14 +60,12 @@ public class ItemRequestServiceImpl implements ItemRequestService {
         if (from < 0 || size <= 0) {
             throw new PaginationBoundariesException(from, size);
         }
-        BooleanExpression notByUserId = QItemRequest.itemRequest.requestor.id.notIn(userId);
-        Sort sort = Sort.by("created").descending();
-        PageRequest pageRequest = PageRequest.of(from, size, sort);
-        Iterable<ItemRequest> iterableItemRequests = itemRequestRepository.findAll(notByUserId, pageRequest);
-        List<ItemRequestResponseDto> itemRequests = itemRequestMapper.mapToItemRequestsDto(iterableItemRequests);
+        List<ItemRequestResponseDto> itemRequests = itemRequestRepository.findAllUsersItemRequest(userId, from, size)
+                .stream()
+                .map(itemRequestMapper::mapToItemRequestDto)
+                .collect(Collectors.toList());
         setItemsToItemRequests(itemRequests);
         return itemRequests;
-
     }
 
     public ItemRequestResponseDto getItemRequest(int userId, int requestId) {

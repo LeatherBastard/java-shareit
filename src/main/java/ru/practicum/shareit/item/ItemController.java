@@ -36,7 +36,7 @@ public class ItemController {
     }
 
     @GetMapping("search")
-    public List<ItemRequestDto> getAllByText(@RequestParam String text,  @RequestParam(defaultValue = "0") int from, @RequestParam(defaultValue = "20") int size) {
+    public List<ItemRequestDto> getAllByText(@RequestParam String text, @RequestParam(defaultValue = "0") int from, @RequestParam(defaultValue = "20") int size) {
         log.info(LOGGER_GET_ITEMS_BY_TEXT_MESSAGE);
         return itemService.getAllByText(text, from, size);
     }

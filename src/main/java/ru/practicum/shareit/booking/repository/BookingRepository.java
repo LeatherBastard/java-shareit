@@ -28,5 +28,87 @@ public interface BookingRepository extends JpaRepository<Booking, Integer>, Quer
             "where bk.item_id=:itemId and bk.start_date >= CURRENT_TIMESTAMP and bk.status='APPROVED') ", nativeQuery = true)
     Optional<Booking> findNextBookingDateForItem(@Param("itemId") int itemId);
 
+    @Query(value = "select * " +
+            "from bookings as bk " +
+            "where bk.booker_id=:bookerId " +
+            "ORDER BY bk.start_date DESC " +
+            "LIMIT :size OFFSET :from ", nativeQuery = true)
+    List<Booking> findAllByUser(@Param("bookerId") int bookerId, @Param("from") int from, @Param("size") int size);
+
+
+    @Query(value = "select * " +
+            "from bookings as bk " +
+            "where bk.booker_id=:bookerId AND bk.status=:status " +
+            "ORDER BY bk.start_date DESC " +
+            "LIMIT :size OFFSET :from ", nativeQuery = true)
+    List<Booking> findAllByUserAndStatus(@Param("bookerId") int bookerId, @Param("status") String status, @Param("from") int from, @Param("size") int size);
+
+
+    @Query(value = "select * " +
+            "from bookings as bk " +
+            "where bk.item_id=:itemId " +
+            "ORDER BY bk.start_date DESC " +
+            "LIMIT :size OFFSET :from ", nativeQuery = true)
+    List<Booking> findAllByItemId(@Param("itemId") int itemId, @Param("from") int from, @Param("size") int size);
+
+    @Query(value = "select * " +
+            "from bookings as bk " +
+            "where bk.item_id=:itemId AND bk.status=:status " +
+            "ORDER BY bk.start_date DESC " +
+            "LIMIT :size OFFSET :from ", nativeQuery = true)
+    List<Booking> findAllByItemIdAndStatus(@Param("itemId") int itemId, @Param("status") String status, @Param("from") int from, @Param("size") int size);
+
+    @Query(value = "select * " +
+            "from bookings as bk " +
+            "where bk.booker_id=:bookerId and  CAST(bk.start_date AS DATE) >= CURRENT_DATE " +
+            "order by bk.start_date desc " +
+            "LIMIT :size OFFSET :from ", nativeQuery = true
+    )
+    List<Booking> findAllFutureBookingsByUser(@Param("bookerId") int bookerId, @Param("from") int from, @Param("size") int size);
+
+
+    @Query(value = "select * " +
+            "from bookings as bk " +
+            "where bk.booker_id=:bookerId and bk.start_date <= CURRENT_TIMESTAMP AND bk.end_date > CURRENT_TIMESTAMP " +
+            "order by bk.start_date desc " +
+            "LIMIT :size OFFSET :from ", nativeQuery = true
+    )
+    List<Booking> findAllCurrentBookingsByUser(@Param("bookerId") int bookerId, @Param("from") int from, @Param("size") int size);
+
+
+    @Query(value = "select * " +
+            "from bookings as bk " +
+            "where bk.booker_id=:bookerId AND bk.end_date < CURRENT_TIMESTAMP " +
+            "order by bk.start_date desc " +
+            "LIMIT :size OFFSET :from ", nativeQuery = true
+    )
+    List<Booking> findAllByPastBookingsByUser(@Param("bookerId") int bookerId, @Param("from") int from, @Param("size") int size);
+
+
+    @Query(value = "select * " +
+            "from bookings as bk " +
+            "where bk.item_id=:itemId and  CAST(bk.start_date AS DATE) >= CURRENT_DATE " +
+            "order by bk.start_date desc " +
+            "LIMIT :size OFFSET :from ", nativeQuery = true
+    )
+    List<Booking> findAllFutureBookingsByItem(@Param("itemId") int itemId, @Param("from") int from, @Param("size") int size);
+
+
+    @Query(value = "select * " +
+            "from bookings as bk " +
+            "where bk.item_id=:itemId and bk.start_date <= CURRENT_TIMESTAMP AND bk.end_date > CURRENT_TIMESTAMP " +
+            "order by bk.start_date desc " +
+            "LIMIT :size OFFSET :from ", nativeQuery = true
+    )
+    List<Booking> findAllCurrentBookingsByItem(@Param("itemId") int itemId, @Param("from") int from, @Param("size") int size);
+
+    @Query(value = "select * " +
+            "from bookings as bk " +
+            "where bk.item_id=:itemId and bk.end_date < CURRENT_TIMESTAMP " +
+            "order by bk.start_date desc " +
+            "LIMIT :size OFFSET :from ", nativeQuery = true
+    )
+    List<Booking> findAllPastBookingsByItem(@Param("itemId") int itemId, @Param("from") int from, @Param("size") int size);
+
 
 }

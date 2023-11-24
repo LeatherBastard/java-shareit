@@ -13,6 +13,6 @@ public interface ItemRequestService {
 
     List<ItemRequestResponseDto> getAllUsersItemRequest(int userId, int from, int size);
 
-    ItemRequestResponseDto getItemRequest(int userId,int requestId);
+    ItemRequestResponseDto getItemRequest(int userId, int requestId);
 
 }

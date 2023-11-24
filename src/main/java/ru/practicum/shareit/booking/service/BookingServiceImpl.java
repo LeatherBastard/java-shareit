@@ -1,16 +1,12 @@
 package ru.practicum.shareit.booking.service;
 
-import com.querydsl.core.types.dsl.BooleanExpression;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.booking.dto.BookingRequestDto;
 import ru.practicum.shareit.booking.dto.BookingResponseDto;
 import ru.practicum.shareit.booking.mapper.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.BookingStatus;
-import ru.practicum.shareit.booking.model.QBooking;
 import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.exception.*;
 import ru.practicum.shareit.item.model.Item;
@@ -19,7 +15,7 @@ import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -121,41 +117,34 @@ public class BookingServiceImpl implements BookingService {
         if (optionalBooker.isEmpty())
             throw new EntityNotFoundException(USER_NOT_FOUND_MESSAGE, bookerId);
 
-        LocalDateTime now = LocalDateTime.now();
-        BooleanExpression byBookerId = QBooking.booking.booker.eq(optionalBooker.get());
-        Sort sort = Sort.by("start").descending();
-        PageRequest pageRequest = PageRequest.of(from, size, sort);
-        Iterable<Booking> bookings;
-
+        List<Booking> result;
         switch (state) {
             case "ALL":
-                bookings = bookingRepository.findAll(byBookerId, pageRequest);
+                result = bookingRepository
+                        .findAllByUser(bookerId, from, size);
                 break;
             case "CURRENT":
-                BooleanExpression byStartLessThan = QBooking.booking.start.lt(now);
-                BooleanExpression byEndGreaterThan = QBooking.booking.end.gt(now);
-                bookings = bookingRepository.findAll(byBookerId.and(byStartLessThan).and(byEndGreaterThan), pageRequest);
+                result = bookingRepository
+                        .findAllCurrentBookingsByUser(bookerId, from, size);
                 break;
             case "PAST":
-                BooleanExpression byEndLessThan = QBooking.booking.end.lt(now);
-                bookings = bookingRepository.findAll(byBookerId.and(byEndLessThan), pageRequest);
+                result = bookingRepository
+                        .findAllByPastBookingsByUser(bookerId, from, size);
                 break;
             case "FUTURE":
-
-                BooleanExpression byStartGreaterThan = QBooking.booking.start.gt(now);
-                bookings = bookingRepository.findAll(byBookerId.and(byStartGreaterThan), pageRequest);
+                result = bookingRepository
+                        .findAllFutureBookingsByUser(bookerId, from, size);
                 break;
             case "WAITING":
             case "REJECTED":
-                BooleanExpression byStatus = QBooking.booking.status.eq(BookingStatus.valueOf(state));
-                bookings = bookingRepository.findAll(byBookerId.and(byStatus), pageRequest);
+                result = bookingRepository
+                        .findAllByUserAndStatus(bookerId, state, from, size);
                 break;
             default:
                 throw new UnsupportedStatusException(STATUS_NOT_SUPPORTED_MESSAGE, state);
         }
-        return mapper.mapToBookingsFromIterable(bookings)
-                .stream()
-                .map(mapper::mapToBookingView)
+
+        return result.stream().map(mapper::mapToBookingView)
                 .collect(Collectors.toList());
     }
 
@@ -171,62 +160,33 @@ public class BookingServiceImpl implements BookingService {
 
         List<Item> userItems = itemRepository.findAllByOwner(optionalUser.get());
 
-        LocalDateTime now = LocalDateTime.now();
-        Sort sort = Sort.by("start").descending();
-        PageRequest pageRequest = PageRequest.of(from, size, sort);
-        Iterable<Booking> bookings;
-        List<Booking> result = new ArrayList<>();
-
+        List<Booking> result;
         switch (state) {
             case "ALL":
-
-                for (Item item : userItems) {
-                    List<Booking> itemBookings = mapper
-                            .mapToBookingsFromIterable(bookingRepository.findAll(QBooking.booking.item.eq(item), pageRequest));
-                    result.addAll(itemBookings);
-                }
+                result = userItems.stream()
+                        .map(item -> bookingRepository.findAllByItemId(item.getId(), from, size))
+                        .flatMap(Collection::stream).collect(Collectors.toList());
                 break;
             case "CURRENT":
-
-                BooleanExpression byStartLessThanEqual = QBooking.booking.start.loe(now);
-                BooleanExpression byEndGreaterThan = QBooking.booking.end.gt(now);
-                for (Item item : userItems) {
-                    List<Booking> itemBookings = mapper
-                            .mapToBookingsFromIterable(bookingRepository
-                                    .findAll(QBooking.booking.item.eq(item).and(byStartLessThanEqual).and(byEndGreaterThan), pageRequest));
-                    result.addAll(itemBookings);
-                }
+                result = userItems.stream()
+                        .map(item -> bookingRepository.findAllCurrentBookingsByItem(item.getId(), from, size))
+                        .flatMap(Collection::stream).collect(Collectors.toList());
                 break;
             case "PAST":
-
-                BooleanExpression byEndLessThan = QBooking.booking.end.lt(now);
-                for (Item item : userItems) {
-                    List<Booking> itemBookings = mapper
-                            .mapToBookingsFromIterable(bookingRepository
-                                    .findAll(QBooking.booking.item.eq(item).and(byEndLessThan), pageRequest));
-                    result.addAll(itemBookings);
-                }
+                result = userItems.stream()
+                        .map(item -> bookingRepository.findAllPastBookingsByItem(item.getId(), from, size))
+                        .flatMap(Collection::stream).collect(Collectors.toList());
                 break;
             case "FUTURE":
-
-                BooleanExpression byStartGreaterThanEqual = QBooking.booking.start.goe(now);
-                for (Item item : userItems) {
-                    List<Booking> itemBookings = mapper
-                            .mapToBookingsFromIterable(bookingRepository
-                                    .findAll(QBooking.booking.item.eq(item).and(byStartGreaterThanEqual), pageRequest));
-                    result.addAll(itemBookings);
-                }
+                result = userItems.stream()
+                        .map(item -> bookingRepository.findAllFutureBookingsByItem(item.getId(), from, size))
+                        .flatMap(Collection::stream).collect(Collectors.toList());
                 break;
             case "WAITING":
             case "REJECTED":
-
-                BooleanExpression byStatus = QBooking.booking.status.eq(BookingStatus.valueOf(state));
-                for (Item item : userItems) {
-                    List<Booking> itemBookings = mapper
-                            .mapToBookingsFromIterable(bookingRepository
-                                    .findAll(QBooking.booking.item.eq(item).and(byStatus), pageRequest));
-                    result.addAll(itemBookings);
-                }
+                result = userItems.stream()
+                        .map(item -> bookingRepository.findAllByItemIdAndStatus(item.getId(), state, from, size))
+                        .flatMap(Collection::stream).collect(Collectors.toList());
                 break;
             default:
                 throw new UnsupportedStatusException(STATUS_NOT_SUPPORTED_MESSAGE, state);

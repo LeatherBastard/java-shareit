@@ -1,8 +1,6 @@
 package ru.practicum.shareit.item.service;
 
-import com.querydsl.core.types.dsl.BooleanExpression;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.booking.mapper.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
@@ -19,7 +17,6 @@ import ru.practicum.shareit.item.dto.ItemResponseDto;
 import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
-import ru.practicum.shareit.item.model.QItem;
 import ru.practicum.shareit.item.repository.CommentRepository;
 import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.request.model.ItemRequest;
@@ -66,12 +63,9 @@ public class ItemServiceImpl implements ItemService {
         Optional<User> optionalUser = userRepository.findById(ownerId);
         if (optionalUser.isEmpty())
             throw new EntityNotFoundException(USER_NOT_FOUND_MESSAGE, ownerId);
-        BooleanExpression byOwnerId = QItem.item.owner.id.eq(ownerId);
-        PageRequest pageRequest = PageRequest.of(from, size);
 
-        Iterable<Item> iterableItems = itemRepository.findAll(byOwnerId, pageRequest);
+        List<Item> ownerItems = itemRepository.findAllByOwnerFromAndLimit(ownerId, from, size);
 
-        List<Item> ownerItems = itemMapper.mapToItemsFromIterable(iterableItems);
         List<ItemResponseDto> items = ownerItems.stream()
                 .map(this::setBookingDatesToItem).collect(Collectors.toList());
         items.forEach(item ->
@@ -94,12 +88,9 @@ public class ItemServiceImpl implements ItemService {
         if (text.isEmpty())
             return new ArrayList<>();
 
-        BooleanExpression byName = QItem.item.name.containsIgnoreCase(text);
-        BooleanExpression byDescription = QItem.item.description.containsIgnoreCase(text);
-        BooleanExpression byAvailable = QItem.item.available.isTrue();
-        PageRequest pageRequest = PageRequest.of(from, size);
-        Iterable<Item> itemsByText = itemRepository.findAll(byAvailable.andAnyOf(byName.or(byDescription)), pageRequest);
-        return itemMapper.mapToItemsFromIterable(itemsByText)
+        List<Item> itemsByText = itemRepository.findAllByText(text, from, size);
+
+        return itemsByText
                 .stream()
                 .map(itemMapper::mapToItemDto)
                 .collect(Collectors.toList());
