@@ -129,7 +129,7 @@ public class BookingServiceImpl implements BookingService {
                 break;
             case "PAST":
                 result = bookingRepository
-                        .findAllByPastBookingsByUser(bookerId, from, size);
+                        .findAllPastBookingsByUser(bookerId, from, size);
                 break;
             case "FUTURE":
                 result = bookingRepository

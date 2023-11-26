@@ -82,7 +82,7 @@ public interface BookingRepository extends JpaRepository<Booking, Integer>, Quer
             "order by bk.start_date desc " +
             "LIMIT :size OFFSET :from ", nativeQuery = true
     )
-    List<Booking> findAllByPastBookingsByUser(@Param("bookerId") int bookerId, @Param("from") int from, @Param("size") int size);
+    List<Booking> findAllPastBookingsByUser(@Param("bookerId") int bookerId, @Param("from") int from, @Param("size") int size);
 
 
     @Query(value = "select * " +
