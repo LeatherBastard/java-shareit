@@ -5,15 +5,18 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import ru.practicum.shareit.booking.dto.BookingRequestDto;
+import ru.practicum.shareit.booking.dto.BookingResponseDto;
 import ru.practicum.shareit.booking.mapper.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.BookingStatus;
 import ru.practicum.shareit.booking.repository.BookingRepository;
+import ru.practicum.shareit.booking.service.BookingService;
 import ru.practicum.shareit.booking.service.BookingServiceImpl;
 import ru.practicum.shareit.exception.*;
 import ru.practicum.shareit.item.model.Item;
@@ -22,6 +25,7 @@ import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -48,8 +52,9 @@ public class BookingServiceImplTest {
     private User user;
     private User anotherUser;
     private Item item;
+    private Booking booking;
 
-    private
+    private ArgumentCaptor<Booking> bookingArgumentCaptor;
 
 
     @BeforeEach
@@ -59,7 +64,7 @@ public class BookingServiceImplTest {
         user = new User(1, "Mark", "kostrykinmark@gmail.com");
         anotherUser = new User(2, "John", "johndoe@gmail.com");
         item = new Item(1, "Пылесос", "Пылесос", true, user, null);
-
+        booking = new Booking(1, LocalDateTime.now().plusDays(1), LocalDateTime.now().plusDays(2), item, user, BookingStatus.WAITING);
     }
 
     @Nested
@@ -230,6 +235,12 @@ public class BookingServiceImplTest {
         }
 
         @Test
+        void getAllByBooker_whenUserNotFound_thenEntityNotFoundExceptionThrown() {
+            assertThrows(EntityNotFoundException.class,
+                    () -> bookingService.getAllByBooker(1, "ALL", 1, 1));
+        }
+
+        @Test
         void getAllByBooker_whenStateIsAll_thenFindAllByUser() {
             when(userRepository.findById(1)).thenReturn(Optional.of(user));
             bookingService.getAllByBooker(1, "ALL", 1, 1);
@@ -267,7 +278,124 @@ public class BookingServiceImplTest {
         @Test
         void getAllByBooker_whenStateIsInvalid_thenUnsupportedStatusExceptionThrown() {
             when(userRepository.findById(1)).thenReturn(Optional.of(user));
-           assertThrows(UnsupportedStatusException.class,()->bookingService.getAllByBooker(1,"ABC",1,1));
+            assertThrows(UnsupportedStatusException.class, () -> bookingService.getAllByBooker(1, "ABC", 1, 1));
         }
     }
+
+    @Nested
+    class BookingServiceGetAllByItemsOwnerTests {
+        @Test
+        void getAllByItemsOwner_whenInvalidFromOrSize_thenPaginationBoundariesExceptionThrown() {
+            assertThrows(PaginationBoundariesException.class,
+                    () -> bookingService.getAllByItemsOwner(1, "ALL", -1, -1));
+            verify(itemRepository, Mockito.never()).findAllByOwner(any(User.class));
+        }
+
+        @Test
+        void getAllByItemsOwner_whenUserNotFound_thenEntityNotFoundExceptionThrown() {
+            assertThrows(EntityNotFoundException.class,
+                    () -> bookingService.getAllByItemsOwner(1, "ALL", 1, 1));
+            verify(itemRepository, Mockito.never()).findAllByOwner(any(User.class));
+        }
+
+        @Test
+        void getAllByItemsOwner_whenStateIsAll_thenFindAllByItemId() {
+            when(userRepository.findById(1)).thenReturn(Optional.of(user));
+            when(itemRepository.findAllByOwner(user)).thenReturn(List.of(item));
+            bookingService.getAllByItemsOwner(1, "ALL", 1, 1);
+            verify(bookingRepository, Mockito.atLeast(1)).findAllByItemId(1, 1, 1);
+        }
+
+        @Test
+        void getAllByItemsOwner_whenStateIsCurrent_thenFindAllCurrentBookingsByItemId() {
+            when(userRepository.findById(1)).thenReturn(Optional.of(user));
+            when(itemRepository.findAllByOwner(user)).thenReturn(List.of(item));
+            bookingService.getAllByItemsOwner(1, "CURRENT", 1, 1);
+            verify(bookingRepository, Mockito.atLeast(1)).findAllCurrentBookingsByItem(1, 1, 1);
+        }
+
+        @Test
+        void getAllByItemsOwner_whenStateIsPast_thenFindAllPastBookingsByItemId() {
+            when(userRepository.findById(1)).thenReturn(Optional.of(user));
+            when(itemRepository.findAllByOwner(user)).thenReturn(List.of(item));
+            bookingService.getAllByItemsOwner(1, "PAST", 1, 1);
+            verify(bookingRepository, Mockito.atLeast(1)).findAllPastBookingsByItem(1, 1, 1);
+        }
+
+        @Test
+        void getAllByItemsOwner_whenStateIsFuture_thenFindAllFutureBookingsByItemId() {
+            when(userRepository.findById(1)).thenReturn(Optional.of(user));
+            when(itemRepository.findAllByOwner(user)).thenReturn(List.of(item));
+            bookingService.getAllByItemsOwner(1, "FUTURE", 1, 1);
+            verify(bookingRepository, Mockito.atLeast(1)).findAllFutureBookingsByItem(1, 1, 1);
+        }
+
+        @Test
+        void getAllByItemsOwner_whenStateIsWaitingOrRejected_thenFindAllByItemIdAndStatus() {
+            when(userRepository.findById(1)).thenReturn(Optional.of(user));
+            when(itemRepository.findAllByOwner(user)).thenReturn(List.of(item));
+            bookingService.getAllByItemsOwner(1, "WAITING", 1, 1);
+            verify(bookingRepository, Mockito.atLeast(1)).findAllByItemIdAndStatus(1, "WAITING", 1, 1);
+        }
+
+
+        @Test
+        void getAllByItemsOwner_whenStateIsInvalid_thenUnsupportedStatusExceptionThrown() {
+            when(userRepository.findById(1)).thenReturn(Optional.of(user));
+            when(itemRepository.findAllByOwner(user)).thenReturn(List.of(item));
+            assertThrows(UnsupportedStatusException.class, () -> bookingService.getAllByItemsOwner(1, "ABC", 1, 1));
+        }
+    }
+
+    @Nested
+    class BookingServiceUpdateBookingStatusTests {
+        @Test
+        void updateBookingStatus_whenBookingIsNotFound_thenEntityNotFoundExceptionThrown() {
+            when(bookingRepository.findById(1)).thenReturn(Optional.empty());
+            assertThrows(EntityNotFoundException.class, () -> bookingService.updateBookingStatus(1, 1, true));
+        }
+
+        @Test
+        void updateBookingStatus_whenUserIsNotFound_thenEntityNotFoundExceptionThrown() {
+            when(bookingRepository.findById(1)).thenReturn(Optional.of(booking));
+            when(userRepository.findById(1)).thenReturn(Optional.empty());
+            assertThrows(EntityNotFoundException.class, () -> bookingService.updateBookingStatus(1, 1, true));
+        }
+
+        @Test
+        void updateBookingStatus_whenBookerNotEqualsItemsOwner_thenWrongOwnerOrBookerExceptionThrown() {
+            when(bookingRepository.findById(1)).thenReturn(Optional.of(booking));
+            when(userRepository.findById(2)).thenReturn(Optional.of(anotherUser));
+            assertThrows(WrongOwnerOrBookerException.class, () -> bookingService.updateBookingStatus(2, 1, true));
+        }
+
+
+        @Test
+        void updateBookingStatus_whenBookingStatusApprovedOrRejected_thenBookingStatusAlreadyAcceptedOrRejectedExceptionThrown() {
+            booking.setStatus(BookingStatus.REJECTED);
+            when(bookingRepository.findById(1)).thenReturn(Optional.of(booking));
+            when(userRepository.findById(1)).thenReturn(Optional.of(user));
+            assertThrows(BookingStatusAlreadyAcceptedOrRejectedException.class, () -> bookingService.updateBookingStatus(1, 1, true));
+        }
+
+        @Test
+        void updateBookingStatus_whenBookingIsFound_thenUpdateOnlyAvailableFields() {
+            when(bookingRepository.findById(1)).thenReturn(Optional.of(booking));
+            when(userRepository.findById(1)).thenReturn(Optional.of(user));
+            Booking updatedBooking = Booking.builder().id(booking.getId()).start(booking.getStart()).end(booking.getEnd())
+                    .item(booking.getItem()).booker(booking.getBooker()).status(BookingStatus.APPROVED).build();
+            when(bookingRepository.save(any(Booking.class))).thenReturn(updatedBooking);
+            BookingResponseDto savedBooking = bookingService.updateBookingStatus(1, 1, true);
+            verify(bookingRepository, Mockito.times(1)).save(any(Booking.class));
+            assertEquals(booking.getId(), savedBooking.getId());
+            assertEquals(booking.getStart(), savedBooking.getStart());
+            assertEquals(booking.getEnd(), savedBooking.getEnd());
+            assertEquals(booking.getItem().getId(), savedBooking.getItem().getId());
+            assertEquals(booking.getBooker().getId(), savedBooking.getBooker().getId());
+            assertEquals(BookingStatus.APPROVED.name(), savedBooking.getStatus());
+        }
+
+
+    }
+
 }

@@ -1,0 +1,188 @@
+package ru.practicum.shareit.item;
+
+import org.checkerframework.checker.nullness.Opt;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
+import ru.practicum.shareit.booking.dto.BookingRequestDto;
+import ru.practicum.shareit.booking.mapper.BookingMapper;
+import ru.practicum.shareit.booking.model.Booking;
+import ru.practicum.shareit.booking.model.BookingStatus;
+import ru.practicum.shareit.booking.repository.BookingRepository;
+import ru.practicum.shareit.booking.service.BookingServiceImpl;
+import ru.practicum.shareit.exception.EntityNotFoundException;
+import ru.practicum.shareit.exception.PaginationBoundariesException;
+import ru.practicum.shareit.item.dto.ItemRequestDto;
+import ru.practicum.shareit.item.dto.ItemResponseDto;
+import ru.practicum.shareit.item.mapper.ItemMapper;
+import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.item.repository.CommentRepository;
+import ru.practicum.shareit.item.repository.ItemRepository;
+import ru.practicum.shareit.item.service.ItemServiceImpl;
+import ru.practicum.shareit.request.model.ItemRequest;
+import ru.practicum.shareit.request.repository.ItemRequestRepository;
+import ru.practicum.shareit.user.model.User;
+import ru.practicum.shareit.user.repository.UserRepository;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+@ExtendWith(MockitoExtension.class)
+public class ItemServiceImplTest {
+
+
+    @Mock
+    private ItemRepository itemRepository;
+    @Mock
+    private UserRepository userRepository;
+    @Mock
+    private CommentRepository commentRepository;
+    @Mock
+    private BookingRepository bookingRepository;
+    @Mock
+    ItemRequestRepository itemRequestRepository;
+
+    private User user;
+    private User anotherUser;
+    private Item item;
+
+    private ItemMapper itemMapper;
+    private BookingMapper bookingMapper;
+
+    @InjectMocks
+    private ItemServiceImpl itemService;
+
+    @BeforeEach
+    void setUp() {
+        itemMapper = new ItemMapper();
+        bookingMapper = new BookingMapper();
+        itemService = new ItemServiceImpl(itemRepository, userRepository, commentRepository, bookingRepository, itemRequestRepository, itemMapper, bookingMapper);
+        user = new User(1, "Mark", "kostrykinmark@gmail.com");
+        anotherUser = new User(1, "John", "johndoe@gmail.com");
+        item = new Item(1, "Пылесос", "Пылесос", true, user, null);
+    }
+
+    @Nested
+    class ItemServiceGetAllByOwnerTests {
+        @Test
+        void getAllByOwner_whenInvalidFromOrSize_thenPaginationBoundariesExceptionThrown() {
+            assertThrows(PaginationBoundariesException.class,
+                    () -> itemService.getAllByOwner(1, -1, -1));
+        }
+
+        @Test
+        void getAllByOwner_whenUserNotFound_thenEntityNotFoundExceptionThrown() {
+            assertThrows(EntityNotFoundException.class,
+                    () -> itemService.getAllByOwner(1, 1, 1));
+        }
+
+        @Test
+        void getAllByOwner_WhenUserFound_thenReturnItems() {
+            when(userRepository.findById(1)).thenReturn(Optional.of(user));
+            when(itemRepository.findAllByOwnerFromAndLimit(1, 1, 1)).thenReturn(List.of(item));
+            List<ItemResponseDto> ownerItems = itemService.getAllByOwner(1, 1, 1);
+            verify(itemRepository, Mockito.times(1)).findAllByOwnerFromAndLimit(1, 1, 1);
+            verify(bookingRepository, Mockito.times(1)).findLastBookingDateForItem(1);
+            verify(bookingRepository, Mockito.times(1)).findNextBookingDateForItem(1);
+            verify(commentRepository, Mockito.times(1)).findAllByItem_Id(1);
+            assertEquals(item.getId(), ownerItems.get(0).getId());
+            assertEquals(item.getName(), ownerItems.get(0).getName());
+            assertEquals(item.getDescription(), ownerItems.get(0).getDescription());
+            assertEquals(item.getAvailable(), ownerItems.get(0).getAvailable());
+        }
+
+    }
+
+    @Nested
+    class ItemServiceGetByIdTests {
+        @Test
+        void getById_whenItemNotFound_thenEntityNotFoundExceptionThrown() {
+            when(itemRepository.findById(1)).thenReturn(Optional.empty());
+            assertThrows(EntityNotFoundException.class, () -> itemService.getById(1, 1));
+            verify(bookingRepository, Mockito.never()).findLastBookingDateForItem(1);
+            verify(bookingRepository, Mockito.never()).findNextBookingDateForItem(1);
+            verify(commentRepository, Mockito.never()).findAllByItem_Id(1);
+        }
+
+        @Test
+        void getAllById_WhenItemFound_thenReturnItem() {
+            when(itemRepository.findById(1)).thenReturn(Optional.of(item));
+            ItemResponseDto foundItem = itemService.getById(1, 1);
+            verify(itemRepository, Mockito.times(1)).findById(1);
+            verify(bookingRepository, Mockito.times(1)).findLastBookingDateForItem(1);
+            verify(bookingRepository, Mockito.times(1)).findNextBookingDateForItem(1);
+            verify(commentRepository, Mockito.times(1)).findAllByItem_Id(1);
+            assertEquals(item.getId(), foundItem.getId());
+            assertEquals(item.getName(), foundItem.getName());
+            assertEquals(item.getDescription(), foundItem.getDescription());
+            assertEquals(item.getAvailable(), foundItem.getAvailable());
+        }
+
+    }
+
+    @Nested
+    class ItemServiceAddTests {
+
+        @Test
+        void add_whenUserNotFound_thenEntityNotFoundExceptionThrown() {
+            ItemRequest itemRequest = new ItemRequest(1, "Нужен пылесос", anotherUser, LocalDateTime.now());
+            ItemRequestDto itemRequestDto = ItemRequestDto
+                    .builder()
+                    .id(1).name("Пылесос").description("Пылесос").available(true).requestId(itemRequest.getId())
+                    .build();
+            when(userRepository.findById(anyInt())).thenReturn(Optional.empty());
+            assertThrows(EntityNotFoundException.class, () -> itemService.add(1, itemRequestDto));
+            verify(itemRepository, Mockito.never()).save(any(Item.class));
+        }
+
+        @Test
+        void add_whenItemRequestNotFound_thenEntityNotFoundExceptionThrown() {
+            ItemRequest itemRequest = new ItemRequest(1, "Нужен пылесос", anotherUser, LocalDateTime.now());
+            ItemRequestDto itemRequestDto = ItemRequestDto
+                    .builder()
+                    .id(1).name("Пылесос").description("Пылесос").available(true).requestId(itemRequest.getId())
+                    .build();
+            when(userRepository.findById(1)).thenReturn(Optional.of(user));
+            when(itemRequestRepository.findById(1)).thenReturn(Optional.empty());
+            assertThrows(EntityNotFoundException.class, () -> itemService.add(1, itemRequestDto));
+            verify(itemRepository, Mockito.never()).save(any(Item.class));
+        }
+
+        @Test
+        void add_whenAllIsValid_thenAddAndReturnItem() {
+            ItemRequest itemRequest = new ItemRequest(1, "Нужен пылесос", anotherUser, LocalDateTime.now());
+            ItemRequestDto itemRequestDto = ItemRequestDto
+                    .builder()
+                    .id(1).name("Пылесос").description("Пылесос").available(true).requestId(itemRequest.getId())
+                    .build();
+            when(userRepository.findById(1)).thenReturn(Optional.of(user));
+            when(itemRequestRepository.findById(1)).thenReturn(Optional.of(itemRequest));
+            item.setRequest(itemRequest);
+            when(itemRepository.save(any(Item.class))).thenReturn(item);
+            ItemRequestDto addedItem = itemService.add(1, itemRequestDto);
+            verify(itemRepository, Mockito.times(1)).save(any(Item.class));
+            assertEquals(itemRequestDto, addedItem);
+        }
+
+    }
+
+    @Nested
+    class ItemServiceAddCommentTests {
+
+    }
+
+
+}
