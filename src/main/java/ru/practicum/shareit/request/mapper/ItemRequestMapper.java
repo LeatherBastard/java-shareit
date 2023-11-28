@@ -17,6 +17,10 @@ public class ItemRequestMapper {
                 .build();
     }
 
+    public ItemRequestRequestDto mapToItemRequestRequestDto(ItemRequest itemRequest) {
+        return new ItemRequestRequestDto(itemRequest.getDescription());
+    }
+
     public ItemRequest mapToItemRequest(ItemRequestRequestDto itemRequestRequestDto) {
         return ItemRequest.builder()
                 .description(itemRequestRequestDto.getDescription())

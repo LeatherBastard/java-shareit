@@ -1,25 +1,25 @@
 package ru.practicum.shareit.item;
 
-import org.checkerframework.checker.nullness.Opt;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
+import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
-import ru.practicum.shareit.booking.dto.BookingRequestDto;
 import ru.practicum.shareit.booking.mapper.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.BookingStatus;
 import ru.practicum.shareit.booking.repository.BookingRepository;
-import ru.practicum.shareit.booking.service.BookingServiceImpl;
+import ru.practicum.shareit.exception.BookingForCommentNotFoundException;
 import ru.practicum.shareit.exception.EntityNotFoundException;
 import ru.practicum.shareit.exception.PaginationBoundariesException;
+import ru.practicum.shareit.exception.WrongOwnerOrBookerException;
+import ru.practicum.shareit.item.dto.CommentRequestDto;
+import ru.practicum.shareit.item.dto.CommentResponseDto;
 import ru.practicum.shareit.item.dto.ItemRequestDto;
 import ru.practicum.shareit.item.dto.ItemResponseDto;
 import ru.practicum.shareit.item.mapper.ItemMapper;
+import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.CommentRepository;
 import ru.practicum.shareit.item.repository.ItemRepository;
@@ -33,12 +33,12 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
 
 @ExtendWith(MockitoExtension.class)
 public class ItemServiceImplTest {
@@ -64,6 +64,9 @@ public class ItemServiceImplTest {
 
     @InjectMocks
     private ItemServiceImpl itemService;
+
+    @Captor
+    ArgumentCaptor<Item> itemArgumentCaptor;
 
     @BeforeEach
     void setUp() {
@@ -181,8 +184,103 @@ public class ItemServiceImplTest {
 
     @Nested
     class ItemServiceAddCommentTests {
+        @Test
+        void addComment_whenUserNotFound_thenEntityNotFoundExceptionThrown() {
+            CommentRequestDto commentRequestDto = CommentRequestDto.builder()
+                    .text("Пылесос оказался как раз вовремя, спасибо").build();
+
+            when(userRepository.findById(anyInt())).thenReturn(Optional.empty());
+            assertThrows(EntityNotFoundException.class, () -> itemService.addComment(1, 1, commentRequestDto));
+            verify(commentRepository, Mockito.never()).save(any(Comment.class));
+        }
+
+        @Test
+        void addComment_whenItemNotFound_thenEntityNotFoundExceptionThrown() {
+            CommentRequestDto commentRequestDto = CommentRequestDto.builder()
+                    .text("Пылесос оказался как раз вовремя, спасибо").build();
+            when(userRepository.findById(1)).thenReturn(Optional.of(user));
+            when(itemRepository.findById(1)).thenReturn(Optional.empty());
+            assertThrows(EntityNotFoundException.class, () -> itemService.addComment(1, 1, commentRequestDto));
+            verify(commentRepository, Mockito.never()).save(any(Comment.class));
+        }
+
+        @Test
+        void addComment_whenBookingNotFound_thenBookingForCommentNotFoundExceptionThrown() {
+            CommentRequestDto commentRequestDto = CommentRequestDto.builder()
+                    .text("Пылесос оказался как раз вовремя, спасибо").build();
+            when(userRepository.findById(1)).thenReturn(Optional.of(user));
+            when(itemRepository.findById(1)).thenReturn(Optional.of(item));
+            when(bookingRepository
+                    .findAllByBooker_IdAndItem_IdAndStatusAndEndIsBefore(any(Integer.class), any(Integer.class), any(BookingStatus.class), any(LocalDateTime.class)))
+                    .thenReturn(List.of());
+            assertThrows(BookingForCommentNotFoundException.class, () -> itemService.addComment(1, 1, commentRequestDto));
+            verify(commentRepository, Mockito.never()).save(any(Comment.class));
+        }
+
+        @Test
+        void addComment_whenAllIsValid_thenAddAndReturnComment() {
+            CommentRequestDto commentRequestDto = CommentRequestDto.builder()
+                    .text("Пылесос оказался как раз вовремя, спасибо").build();
+            when(userRepository.findById(1)).thenReturn(Optional.of(user));
+            when(itemRepository.findById(1)).thenReturn(Optional.of(item));
+            Booking booking = new Booking(1, LocalDateTime.now().plusDays(1), LocalDateTime.now().plusDays(2), item, user, BookingStatus.WAITING);
+            when(bookingRepository
+                    .findAllByBooker_IdAndItem_IdAndStatusAndEndIsBefore(any(Integer.class), any(Integer.class), any(BookingStatus.class), any(LocalDateTime.class)))
+                    .thenReturn(List.of(booking));
+            when(commentRepository.save(any(Comment.class))).thenReturn(
+                    new Comment(1, commentRequestDto.getText(), item, user, LocalDateTime.now()));
+            CommentResponseDto savedComment = itemService.addComment(1, 1, commentRequestDto);
+            verify(commentRepository, Mockito.times(1)).save(any(Comment.class));
+            assertEquals(1, savedComment.getId());
+            assertEquals(commentRequestDto.getText(), savedComment.getText());
+            assertEquals(user.getName(), savedComment.getAuthorName());
+        }
 
     }
 
+    @Nested
+    class ItemServiceUpdateTests {
+        @Test
+        void update_whenUserNotFound_thenEntityNotFoundExceptionThrown() {
+            ItemRequest itemRequest = new ItemRequest(1, "Нужен пылесос", anotherUser, LocalDateTime.now());
+            ItemRequestDto itemRequestDto = ItemRequestDto
+                    .builder()
+                    .id(1).name("Пылесос").description("Пылесос").available(true).requestId(itemRequest.getId())
+                    .build();
+
+            when(itemRepository.findById(anyInt())).thenReturn(Optional.empty());
+            assertThrows(EntityNotFoundException.class, () -> itemService.update(1, 1, itemRequestDto));
+            verify(itemRepository, Mockito.never()).save(any(Item.class));
+        }
+
+        @Test
+        void update_whenUserIdNotEqualsItemOwnerId_thenWrongOwnerOrBookerExceptionThrown() {
+            ItemRequest itemRequest = new ItemRequest(1, "Нужен пылесос", user, LocalDateTime.now());
+            ItemRequestDto itemRequestDto = ItemRequestDto
+                    .builder()
+                    .id(1).name("Пылесос").description("Пылесос").available(true).requestId(itemRequest.getId())
+                    .build();
+
+            when(itemRepository.findById(1)).thenReturn(Optional.of(item));
+            assertThrows(WrongOwnerOrBookerException.class, () -> itemService.update(2, 1, itemRequestDto));
+        }
+
+        @Test
+        void update_whenItemIsFound_thenUpdateOnlyAvailableFields() {
+
+            Item updateItem = new Item(3, "Кофеварка", "Кофеварка", false, null, null);
+            when(itemRepository.findById(1)).thenReturn(Optional.of(item));
+            when(itemRepository.save(any(Item.class))).thenReturn(updateItem);
+            verify(itemRepository).save(itemArgumentCaptor.capture());
+            itemService.update(1, 1, itemMapper.mapToItemDto(updateItem));
+            verify(itemRepository, Mockito.times(1)).save(any(Item.class));
+            Item savedItem = itemArgumentCaptor.getValue();
+            assertNotEquals(item.getId(), savedItem.getId());
+            assertEquals(item.getName(), savedItem.getName());
+            assertEquals(item.getDescription(), savedItem.getDescription());
+            assertEquals(item.getAvailable(), savedItem.getAvailable());
+        }
+
+    }
 
 }
