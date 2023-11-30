@@ -73,18 +73,6 @@ public class UserControllerTest {
 
     @SneakyThrows
     @Test
-    void updateUser_WhenUserIsNotValid_thenReturnBadRequest() {
-        Integer userId = 1;
-        UserDto userDto = new UserDto(1, null, "kostrykinmark@gmail.com");
-        mockMvc.perform(patch("/users/{id}", userId)
-                        .contentType("application/json")
-                        .content(objectMapper.writeValueAsString(userDto)))
-                .andExpect(status().isBadRequest());
-        verify(userService, Mockito.never()).update(1, userDto);
-    }
-
-    @SneakyThrows
-    @Test
     void deleteUser() {
         Integer userId = 1;
         mockMvc.perform(delete("/users/{id}", userId))

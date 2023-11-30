@@ -54,7 +54,7 @@ public class ItemRequestControllerTest {
 
     @SneakyThrows
     @Test
-    void addItemRequest_whenItemRequest_thenReturnBadRequest() {
+    void addItemRequest_whenItemRequestNotValid_thenReturnBadRequest() {
         Integer userId = 1;
         ItemRequestRequestDto itemRequestRequestDto = new ItemRequestRequestDto("");
         mockMvc.perform(post("/requests")

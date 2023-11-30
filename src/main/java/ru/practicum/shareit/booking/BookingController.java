@@ -32,12 +32,6 @@ public class BookingController {
         return bookingService.add(userId, bookingRequestDto);
     }
 
-    @PatchMapping("/{bookingId}")
-    public BookingResponseDto updateBookingStatus(@RequestHeader(USER_ID_REQUEST_HEADER) int userId, @PathVariable("bookingId") int bookingId, @RequestParam boolean approved) {
-        log.info(LOGGER_UPDATE_BOOKING_MESSAGE, bookingId);
-        return bookingService.updateBookingStatus(userId, bookingId, approved);
-    }
-
     @GetMapping("/{bookingId}")
     public BookingResponseDto getBookingById(@RequestHeader(USER_ID_REQUEST_HEADER) int userId, @PathVariable("bookingId") int bookingId) {
         log.info(LOGGER_GET_BOOKING_BY_ID_MESSAGE, bookingId);
@@ -54,5 +48,11 @@ public class BookingController {
     public List<BookingResponseDto> getBookingsByItemsOwner(@RequestHeader(USER_ID_REQUEST_HEADER) int userId, @RequestParam(defaultValue = "ALL") String state, @RequestParam(defaultValue = "0") int from, @RequestParam(defaultValue = "20") int size) {
         log.info(LOGGER_GET_BOOKINGS_BY_USER_ITEMS_MESSAGE);
         return bookingService.getAllByItemsOwner(userId, state, from, size);
+    }
+
+    @PatchMapping("/{bookingId}")
+    public BookingResponseDto updateBookingStatus(@RequestHeader(USER_ID_REQUEST_HEADER) int userId, @PathVariable("bookingId") int bookingId, @RequestParam boolean approved) {
+        log.info(LOGGER_UPDATE_BOOKING_MESSAGE, bookingId);
+        return bookingService.updateBookingStatus(userId, bookingId, approved);
     }
 }
