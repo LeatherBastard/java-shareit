@@ -1,5 +1,6 @@
 package ru.practicum.shareit.item;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -26,9 +27,7 @@ public class ItemRepositoryTest {
     @Autowired
     private UserRepository userRepository;
 
-
     @Test
-    @Transactional
     void findAllByText() {
         assertFalse(userRepository.findById(1).isPresent());
         User user = new User(1, "Mark", "kostrykinmark@gmail.com");
