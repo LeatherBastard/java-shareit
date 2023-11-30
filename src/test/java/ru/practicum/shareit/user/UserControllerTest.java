@@ -50,6 +50,21 @@ public class UserControllerTest {
 
     @SneakyThrows
     @Test
+    void getUser() {
+        Integer userId = 1;
+        UserDto userDto = new UserDto(1, "Mark", "kostrykinmark@gmail.com");
+        when(userService.getById(userId)).thenReturn(userDto);
+        String result = mockMvc.perform(get("/users/{id}", userId))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        verify(userService, Mockito.times(1)).getById(userId);
+        assertEquals(objectMapper.writeValueAsString(userDto), result);
+    }
+
+    @SneakyThrows
+    @Test
     void getAllUsers() {
         mockMvc.perform(get("/users"))
                 .andExpect(status().isOk());
@@ -67,4 +82,15 @@ public class UserControllerTest {
                 .andExpect(status().isBadRequest());
         verify(userService, Mockito.never()).update(1, userDto);
     }
+
+    @SneakyThrows
+    @Test
+    void deleteUser() {
+        Integer userId = 1;
+        mockMvc.perform(delete("/users/{id}", userId))
+                .andExpect(status().isOk());
+        verify(userService).remove(userId);
+    }
+
+
 }

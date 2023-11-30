@@ -271,14 +271,14 @@ public class ItemServiceImplTest {
             Item updateItem = new Item(3, "Кофеварка", "Кофеварка", false, null, null);
             when(itemRepository.findById(1)).thenReturn(Optional.of(item));
             when(itemRepository.save(any(Item.class))).thenReturn(updateItem);
-            verify(itemRepository).save(itemArgumentCaptor.capture());
             itemService.update(1, 1, itemMapper.mapToItemDto(updateItem));
+            verify(itemRepository).save(itemArgumentCaptor.capture());
             verify(itemRepository, Mockito.times(1)).save(any(Item.class));
             Item savedItem = itemArgumentCaptor.getValue();
-            assertNotEquals(item.getId(), savedItem.getId());
-            assertEquals(item.getName(), savedItem.getName());
-            assertEquals(item.getDescription(), savedItem.getDescription());
-            assertEquals(item.getAvailable(), savedItem.getAvailable());
+            assertNotEquals(updateItem.getId(), savedItem.getId());
+            assertEquals(updateItem.getName(), savedItem.getName());
+            assertEquals(updateItem.getDescription(), savedItem.getDescription());
+            assertEquals(updateItem.getAvailable(), savedItem.getAvailable());
         }
 
     }

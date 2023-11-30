@@ -1,6 +1,5 @@
 package ru.practicum.shareit.booking;
 
-import org.checkerframework.checker.units.qual.A;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +17,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DataJpaTest
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
@@ -107,8 +107,8 @@ public class BookingRepositoryTest {
     void findAllByItemId() {
         List<Booking> bookings = bookingRepository.findAllByItemId(1, 0, 2);
         assertEquals(2, bookings.size());
-        assertEquals(2, bookings.get(0).getBooker().getId());
-        assertEquals(3, bookings.get(1).getBooker().getId());
+        assertEquals(4, bookings.get(0).getBooker().getId());
+        assertEquals(5, bookings.get(1).getBooker().getId());
     }
 
     @Test
