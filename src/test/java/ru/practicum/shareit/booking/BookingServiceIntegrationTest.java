@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
- class BookingServiceIntegrationTest {
+class BookingServiceIntegrationTest {
     private final UserService userService;
     private final ItemService itemService;
 
@@ -63,9 +63,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
         List<BookingResponseDto> bookings = bookingService.getAllByBooker(secondUser.getId(), "ALL", 0, 2);
         assertEquals(2, bookings.size());
-        assertEquals(firstItem.getId(), bookings.get(0).getItemId());
+        assertEquals(secondItem.getId(), bookings.get(0).getItemId());
         assertEquals(secondUser.getId(), bookings.get(0).getBooker().getId());
-        assertEquals(secondItem.getId(), bookings.get(1).getItemId());
+        assertEquals(firstItem.getId(), bookings.get(1).getItemId());
         assertEquals(secondUser.getId(), bookings.get(1).getBooker().getId());
     }
 

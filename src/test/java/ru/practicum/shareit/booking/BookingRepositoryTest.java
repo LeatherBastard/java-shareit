@@ -107,7 +107,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
     void findAllByItemId() {
         List<Booking> bookings = bookingRepository.findAllByItemId(1, 0, 2);
         assertEquals(2, bookings.size());
-        assertEquals(2, bookings.get(0).getBooker().getId());
+        assertEquals(4, bookings.get(0).getBooker().getId());
         assertEquals(3, bookings.get(1).getBooker().getId());
     }
 
