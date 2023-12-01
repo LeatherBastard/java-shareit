@@ -1,6 +1,5 @@
 package ru.practicum.shareit.item;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -11,14 +10,13 @@ import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
-import javax.transaction.Transactional;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @DataJpaTest
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
-public class ItemRepositoryTest {
+class ItemRepositoryTest {
 
     @Autowired
     private TestEntityManager entityManager;
@@ -50,7 +48,7 @@ public class ItemRepositoryTest {
                         .build());
         List<Item> items = itemRepository.findAllByText("кофеварка", 0, 1);
         assertEquals(1, items.size());
-        assertEquals(items.get(0).getId(), 2);
+        assertEquals(2, items.get(0).getId());
     }
 
     @Test

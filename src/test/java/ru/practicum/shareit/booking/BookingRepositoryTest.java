@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DataJpaTest
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-public class BookingRepositoryTest {
+ class BookingRepositoryTest {
 
     @Autowired
     UserRepository userRepository;
@@ -81,14 +81,14 @@ public class BookingRepositoryTest {
     void findLastBookingDateForItem() {
         Optional<Booking> booking = bookingRepository.findLastBookingDateForItem(1);
         assertTrue(booking.isPresent());
-        assertEquals(booking.get().getBooker().getId(), 3);
+        assertEquals(3, booking.get().getBooker().getId());
     }
 
     @Test
     void findNextBookingDateForItem() {
         Optional<Booking> booking = bookingRepository.findNextBookingDateForItem(1);
         assertTrue(booking.isPresent());
-        assertEquals(booking.get().getBooker().getId(), 2);
+        assertEquals(2, booking.get().getBooker().getId());
     }
 
     @Test
@@ -107,15 +107,15 @@ public class BookingRepositoryTest {
     void findAllByItemId() {
         List<Booking> bookings = bookingRepository.findAllByItemId(1, 0, 2);
         assertEquals(2, bookings.size());
-        assertEquals(4, bookings.get(0).getBooker().getId());
-        assertEquals(5, bookings.get(1).getBooker().getId());
+        assertEquals(2, bookings.get(0).getBooker().getId());
+        assertEquals(3, bookings.get(1).getBooker().getId());
     }
 
     @Test
     void findAllByItemIdAndStatus() {
         List<Booking> bookings = bookingRepository.findAllByItemIdAndStatus(2, "APPROVED", 0, 2);
         assertEquals(1, bookings.size());
-        assertEquals(bookings.get(0).getBooker().getId(), 2);
+        assertEquals(2, bookings.get(0).getBooker().getId());
     }
 
     @Test
