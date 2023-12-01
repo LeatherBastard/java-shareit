@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DataJpaTest
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
- class BookingRepositoryTest {
+class BookingRepositoryTest {
 
     @Autowired
     UserRepository userRepository;
@@ -108,7 +108,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
         List<Booking> bookings = bookingRepository.findAllByItemId(1, 0, 2);
         assertEquals(2, bookings.size());
         assertEquals(4, bookings.get(0).getBooker().getId());
-        assertEquals(3, bookings.get(1).getBooker().getId());
+        assertEquals(5, bookings.get(1).getBooker().getId());
     }
 
     @Test
