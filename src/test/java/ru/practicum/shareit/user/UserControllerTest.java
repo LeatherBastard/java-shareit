@@ -15,6 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(UserController.class)
@@ -73,6 +74,22 @@ class UserControllerTest {
         mockMvc.perform(delete("/users/{id}", userId))
                 .andExpect(status().isOk());
         verify(userService).remove(userId);
+    }
+
+    @SneakyThrows
+    @Test
+    void updateUser() {
+        Integer userId = 1;
+        UserDto userDto = new UserDto(1, "Mark", "kostrykinmark@gmail.com");
+        when(userService.update(userId, userDto)).thenReturn(userDto);
+        mockMvc.perform(patch("/users/{id}", userId)
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(userDto)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(userDto.getId()))
+                .andExpect(jsonPath("$.name").value(userDto.getName()))
+                .andExpect(jsonPath("$.email").value(userDto.getEmail()));
+        verify(userService, Mockito.times(1)).update(userId, userDto);
     }
 
 
