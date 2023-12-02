@@ -1,5 +1,6 @@
 package ru.practicum.shareit.item;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -9,10 +10,12 @@ import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
+import javax.transaction.Transactional;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@Transactional
 @DataJpaTest
 class ItemRepositoryTest {
 
@@ -22,6 +25,13 @@ class ItemRepositoryTest {
     private ItemRepository itemRepository;
     @Autowired
     private UserRepository userRepository;
+
+
+    @AfterEach
+    void clearRepositories() {
+        itemRepository.deleteAll();
+        userRepository.deleteAll();
+    }
 
     @Test
     void findAllByText() {

@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @Transactional
 @ExtendWith(SpringExtension.class)
-@SpringBootTest(
+@SpringBootTest(properties = "db.name=test",
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 class BookingServiceIntegrationTest {
@@ -33,6 +33,7 @@ class BookingServiceIntegrationTest {
     private final ItemService itemService;
 
     private final BookingService bookingService;
+
 
     @Test
     void getAllByBooker() {

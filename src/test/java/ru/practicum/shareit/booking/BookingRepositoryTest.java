@@ -1,5 +1,6 @@
 package ru.practicum.shareit.booking;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +13,7 @@ import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
+import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -19,6 +21,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@Transactional
 @DataJpaTest
 class BookingRepositoryTest {
 
@@ -29,6 +32,7 @@ class BookingRepositoryTest {
 
     @Autowired
     BookingRepository bookingRepository;
+
 
     private User firstUser;
     private User secondUser;
@@ -42,6 +46,13 @@ class BookingRepositoryTest {
     private Booking thirdBooking;
 
     private Booking fourthBooking;
+
+    @AfterEach
+    void clearRepositories() {
+        bookingRepository.deleteAll();
+        itemRepository.deleteAll();
+        userRepository.deleteAll();
+    }
 
     @BeforeEach
     void initialize() {

@@ -1,5 +1,6 @@
 package ru.practicum.shareit.request;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -8,12 +9,14 @@ import ru.practicum.shareit.request.repository.ItemRequestRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
+import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@Transactional
 @DataJpaTest
 class ItemRequestRepositoryTest {
 
@@ -22,6 +25,12 @@ class ItemRequestRepositoryTest {
 
     @Autowired
     UserRepository userRepository;
+
+    @AfterEach
+    void clearRepositories() {
+        itemRequestRepository.deleteAll();
+        userRepository.deleteAll();
+    }
 
     @Test
     void findAllUsersItemRequest() {
