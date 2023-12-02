@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import ru.practicum.shareit.exception.EntityNotFoundException;
 import ru.practicum.shareit.user.dto.UserDto;
@@ -22,7 +21,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
         properties = "db.name=test",
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 class UserServiceIntegrationTest {
 
     private final UserService userService;
@@ -30,8 +28,8 @@ class UserServiceIntegrationTest {
     @Test
     void getById() {
         UserDto userDto = new UserDto(1, "Mark", "kostrykinmark@gmail.com");
-        userService.add(userDto);
-        assertEquals(userDto, userService.getById(1));
+        UserDto savedUser = userService.add(userDto);
+        assertEquals(userDto, userService.getById(savedUser.getId()));
     }
 
     @Test

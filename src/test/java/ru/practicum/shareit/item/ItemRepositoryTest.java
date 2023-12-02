@@ -4,7 +4,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
-import org.springframework.test.annotation.DirtiesContext;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.model.User;
@@ -15,7 +14,6 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 @DataJpaTest
-@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 class ItemRepositoryTest {
 
     @Autowired
@@ -27,15 +25,14 @@ class ItemRepositoryTest {
 
     @Test
     void findAllByText() {
-        assertFalse(userRepository.findById(1).isPresent());
         User user = new User(1, "Mark", "kostrykinmark@gmail.com");
-        userRepository.save(user);
-        assertTrue(userRepository.findById(1).isPresent());
+        User savedUser = userRepository.save(user);
+        assertTrue(userRepository.findById(savedUser.getId()).isPresent());
         itemRepository.save(
                 Item.builder()
                         .name("Пылесос")
                         .description("Пылесос")
-                        .owner(user)
+                        .owner(savedUser)
                         .available(true)
                         .build());
 
@@ -43,25 +40,26 @@ class ItemRepositoryTest {
                 Item.builder()
                         .name("коФеВаРка")
                         .description("КофеВАРка")
-                        .owner(user)
+                        .owner(savedUser)
                         .available(true)
                         .build());
         List<Item> items = itemRepository.findAllByText("кофеварка", 0, 1);
         assertEquals(1, items.size());
-        assertEquals(2, items.get(0).getId());
+        assertNotNull(items.get(0).getId());
+        assertEquals("коФеВаРка", items.get(0).getName());
+        assertEquals("КофеВАРка", items.get(0).getDescription());
     }
 
     @Test
     void findAllByOwnerFromAndLimit() {
-        assertFalse(userRepository.findById(1).isPresent());
         User user = new User(1, "Mark", "kostrykinmark@gmail.com");
-        userRepository.save(user);
-        assertTrue(userRepository.findById(1).isPresent());
+        User savedUser = userRepository.save(user);
+        assertTrue(userRepository.findById(savedUser.getId()).isPresent());
         itemRepository.save(
                 Item.builder()
                         .name("Пылесос")
                         .description("Пылесос")
-                        .owner(user)
+                        .owner(savedUser)
                         .available(true)
                         .build());
 
@@ -69,12 +67,12 @@ class ItemRepositoryTest {
                 Item.builder()
                         .name("коФеВаРка")
                         .description("КофеВАРка")
-                        .owner(user)
+                        .owner(savedUser)
                         .available(true)
                         .build());
-        List<Item> items = itemRepository.findAllByOwnerFromAndLimit(1, 0, 2);
+        List<Item> items = itemRepository.findAllByOwnerFromAndLimit(savedUser.getId(), 0, 2);
         assertEquals(2, items.size());
-        assertEquals(1, (int) items.get(0).getOwner().getId());
+        assertEquals(savedUser.getId(), (int) items.get(0).getOwner().getId());
         assertEquals("Пылесос", items.get(0).getName());
     }
 

@@ -3,7 +3,6 @@ package ru.practicum.shareit.request;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.test.annotation.DirtiesContext;
 import ru.practicum.shareit.request.model.ItemRequest;
 import ru.practicum.shareit.request.repository.ItemRequestRepository;
 import ru.practicum.shareit.user.model.User;
@@ -16,7 +15,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DataJpaTest
-@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 class ItemRequestRepositoryTest {
 
     @Autowired
@@ -27,22 +25,22 @@ class ItemRequestRepositoryTest {
 
     @Test
     void findAllUsersItemRequest() {
-        User firstUser = User.builder().id(1).name("Mark").email("kostrykinmark@gmail.com").build();
-        User secondUser = User.builder().id(2).name("John").email("johndoe@gmail.com").build();
-        userRepository.save(firstUser);
-        assertTrue(userRepository.findById(1).isPresent());
-        userRepository.save(secondUser);
-        assertTrue(userRepository.findById(2).isPresent());
-        itemRequestRepository
+        User firstUser = userRepository.save(User.builder().id(1).name("Mark").email("kostrykinmark@gmail.com").build());
+        assertTrue(userRepository.findById(firstUser.getId()).isPresent());
+        User secondUser = userRepository.save(User.builder().id(2).name("John").email("johndoe@gmail.com").build());
+        assertTrue(userRepository.findById(secondUser.getId()).isPresent());
+
+        ItemRequest firstItemRequest = itemRequestRepository
                 .save(ItemRequest.builder().description("Нужна кофеварка").requestor(firstUser).created(LocalDateTime.now().minusHours(2)).build());
-        assertTrue(itemRequestRepository.findById(1).isPresent());
-        itemRequestRepository
+        assertTrue(itemRequestRepository.findById(firstItemRequest.getId()).isPresent());
+        ItemRequest secondItemRequest = itemRequestRepository
                 .save(ItemRequest.builder().description("Нужен пылесос").requestor(firstUser).created(LocalDateTime.now()).build());
-        assertTrue(itemRequestRepository.findById(2).isPresent());
-        List<ItemRequest> itemRequests = itemRequestRepository.findAllUsersItemRequest(2, 0, 3);
+        assertTrue(itemRequestRepository.findById(secondItemRequest.getId()).isPresent());
+
+        List<ItemRequest> itemRequests = itemRequestRepository.findAllUsersItemRequest(secondUser.getId(), 0, 3);
         assertEquals(2, itemRequests.size());
-        assertEquals("Нужен пылесос", itemRequests.get(0).getDescription());
-        assertEquals("Нужна кофеварка", itemRequests.get(1).getDescription());
+        assertEquals(secondItemRequest, itemRequests.get(0));
+        assertEquals(firstItemRequest, itemRequests.get(1));
     }
 
 }

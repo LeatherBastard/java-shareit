@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import ru.practicum.shareit.exception.PaginationBoundariesException;
 import ru.practicum.shareit.item.service.ItemService;
@@ -28,7 +27,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
         properties = "db.name=test",
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 class ItemRequestServiceIntegrationTest {
     private final ItemService itemService;
     private final UserService userService;
@@ -45,15 +43,16 @@ class ItemRequestServiceIntegrationTest {
         UserDto secondUser = new UserDto(2, "John", "johndoe@gmail.com");
         ItemRequestRequestDto firstRequest = new ItemRequestRequestDto("Нужен пылесос");
         ItemRequestRequestDto secondRequest = new ItemRequestRequestDto("Нужна кофемашина");
-        userService.add(user);
-        itemRequestService.addItemRequest(user.getId(), firstRequest);
-        itemRequestService.addItemRequest(user.getId(), secondRequest);
+        UserDto savedFirstUser = userService.add(user);
+        UserDto savedSecondUser = userService.add(secondUser);
+        ItemRequestResponseDto savedFirstItemRequest = itemRequestService.addItemRequest(savedFirstUser.getId(), firstRequest);
+        ItemRequestResponseDto savedSecondItemRequest = itemRequestService.addItemRequest(savedFirstUser.getId(), secondRequest);
 
-        List<ItemRequestResponseDto> itemRequests = itemRequestService.getAllUsersItemRequest(secondUser.getId(), 0, 2);
+        List<ItemRequestResponseDto> itemRequests = itemRequestService.getAllUsersItemRequest(savedSecondUser.getId(), 0, 2);
 
         assertEquals(2, itemRequests.size());
-        assertEquals(secondRequest.getDescription(), itemRequests.get(0).getDescription());
-        assertEquals(firstRequest.getDescription(), itemRequests.get(1).getDescription());
+        assertEquals(savedSecondItemRequest.getDescription(), itemRequests.get(0).getDescription());
+        assertEquals(savedFirstItemRequest.getDescription(), itemRequests.get(1).getDescription());
     }
 
 }
