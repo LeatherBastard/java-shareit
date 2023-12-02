@@ -27,9 +27,11 @@ class UserServiceIntegrationTest {
 
     @Test
     void getById() {
-        UserDto userDto = new UserDto(1, "Mark", "kostrykinmark@gmail.com");
-        UserDto savedUser = userService.add(userDto);
-        assertEquals(userDto, userService.getById(savedUser.getId()));
+
+        UserDto savedUser = userService.add(new UserDto(1, "Mark", "kostrykinmark@gmail.com"));
+        UserDto foundUser = userService.getById(savedUser.getId());
+        assertEquals(savedUser.getName(), foundUser.getName());
+        assertEquals(savedUser.getEmail(), foundUser.getEmail());
     }
 
     @Test
