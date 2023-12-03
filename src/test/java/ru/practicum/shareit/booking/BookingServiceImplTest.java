@@ -9,6 +9,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
 import ru.practicum.shareit.booking.dto.BookingRequestDto;
 import ru.practicum.shareit.booking.dto.BookingResponseDto;
 import ru.practicum.shareit.booking.mapper.BookingMapper;
@@ -42,7 +43,8 @@ public class BookingServiceImplTest {
     @Mock
     private BookingRepository bookingRepository;
 
-    private BookingMapper mapper;
+    @Autowired
+    private BookingMapper bookingMapper;
 
     @InjectMocks
     private BookingServiceImpl bookingService;
@@ -55,8 +57,8 @@ public class BookingServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        mapper = new BookingMapper();
-        bookingService = new BookingServiceImpl(userRepository, itemRepository, bookingRepository, mapper);
+        bookingMapper = new BookingMapper();
+        bookingService = new BookingServiceImpl(userRepository, itemRepository, bookingRepository, bookingMapper);
         user = new User(1, "Mark", "kostrykinmark@gmail.com");
         anotherUser = new User(2, "John", "johndoe@gmail.com");
         item = new Item(1, "Пылесос", "Пылесос", true, user, null);
@@ -176,7 +178,7 @@ public class BookingServiceImplTest {
             when(userRepository.findById(anyInt()))
                     .thenReturn(Optional.of(anotherUser));
             when(itemRepository.findById(anyInt())).thenReturn(Optional.of(item));
-            Booking bookingToSave = mapper.mapToBooking(bookingRequestDto);
+            Booking bookingToSave = bookingMapper.mapToBooking(bookingRequestDto);
             bookingToSave.setItem(item);
             bookingToSave.setBooker(anotherUser);
             bookingToSave.setStatus(BookingStatus.WAITING);
@@ -218,7 +220,7 @@ public class BookingServiceImplTest {
                     .booker(user).item(item).status(BookingStatus.WAITING).build();
             when(userRepository.findById(1)).thenReturn(Optional.of(user));
             when(bookingRepository.findById(1)).thenReturn(Optional.of(booking));
-            assertEquals(mapper.mapToBookingView(booking), bookingService.getById(1, 1));
+            assertEquals(bookingMapper.mapToBookingView(booking), bookingService.getById(1, 1));
         }
     }
 

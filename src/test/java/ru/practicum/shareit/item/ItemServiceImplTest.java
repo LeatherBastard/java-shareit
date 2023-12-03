@@ -78,6 +78,22 @@ public class ItemServiceImplTest {
         item = new Item(1, "Пылесос", "Пылесос", true, user, null);
     }
 
+
+    @Nested
+    class ItemServiceGetAllTests {
+        @Test
+        void getAll() {
+            when(itemRepository.findAll()).thenReturn(List.of(item));
+            List<ItemRequestDto> items = itemService.getAll();
+            assertEquals(1, items.size());
+            assertEquals(item.getId(), items.get(0).getId());
+            assertEquals(item.getName(), items.get(0).getName());
+            assertEquals(item.getDescription(), items.get(0).getDescription());
+            assertEquals(item.getAvailable(), items.get(0).getAvailable());
+        }
+
+    }
+
     @Nested
     class ItemServiceGetAllByOwnerTests {
         @Test
@@ -106,6 +122,28 @@ public class ItemServiceImplTest {
             assertEquals(item.getDescription(), ownerItems.get(0).getDescription());
             assertEquals(item.getAvailable(), ownerItems.get(0).getAvailable());
         }
+    }
+
+
+    @Nested
+    class ItemServiceGetAllByTextTests {
+        @Test
+        void getAllByText_whenInvalidFromOrSize_thenPaginationBoundariesExceptionThrown() {
+            assertThrows(PaginationBoundariesException.class,
+                    () -> itemService.getAllByText("ABC", -1, -1));
+            verify(itemRepository, Mockito.never()).findAllByText("ABC", -1, -1);
+        }
+
+
+        @Test
+        void getAllByText_WhenUserFound_thenReturnItems() {
+            when(itemRepository.findAllByText("пЫлеСос", 1, 1)).thenReturn(List.of(item));
+            List<ItemRequestDto> itemsByText = itemService.getAllByText("пЫлеСос", 1, 1);
+            verify(itemRepository, Mockito.times(1)).findAllByText("пЫлеСос", 1, 1);
+            assertEquals(item.getId(), itemsByText.get(0).getId());
+            assertEquals(item.getName(), itemsByText.get(0).getName());
+            assertEquals(item.getDescription(), itemsByText.get(0).getDescription());
+        }
 
     }
 
@@ -123,6 +161,15 @@ public class ItemServiceImplTest {
         @Test
         void getAllById_WhenItemFound_thenReturnItem() {
             when(itemRepository.findById(1)).thenReturn(Optional.of(item));
+            Booking firstBooking = Booking
+                    .builder()
+                    .start(LocalDateTime.now().plusHours(1)).end(LocalDateTime.now().plusDays(2)).item(item).booker(anotherUser).status(BookingStatus.APPROVED)
+                    .build();
+            Booking secondBooking = Booking.builder()
+                    .start(LocalDateTime.now().minusDays(1)).end(LocalDateTime.now().minusHours(2)).item(item).booker(anotherUser).status(BookingStatus.APPROVED)
+                    .build();
+            when(bookingRepository.findLastBookingDateForItem(1)).thenReturn(Optional.of(secondBooking));
+            when(bookingRepository.findNextBookingDateForItem(1)).thenReturn(Optional.of(firstBooking));
             ItemResponseDto foundItem = itemService.getById(1, 1);
             verify(itemRepository, Mockito.times(1)).findById(1);
             verify(bookingRepository, Mockito.times(1)).findLastBookingDateForItem(1);
@@ -132,6 +179,8 @@ public class ItemServiceImplTest {
             assertEquals(item.getName(), foundItem.getName());
             assertEquals(item.getDescription(), foundItem.getDescription());
             assertEquals(item.getAvailable(), foundItem.getAvailable());
+            assertEquals(bookingMapper.mapToBookingItemView(secondBooking), foundItem.getLastBooking());
+            assertEquals(bookingMapper.mapToBookingItemView(firstBooking), foundItem.getNextBooking());
         }
 
     }
