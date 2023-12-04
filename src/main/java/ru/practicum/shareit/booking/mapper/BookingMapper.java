@@ -13,7 +13,7 @@ import ru.practicum.shareit.user.dto.UserBookingDto;
 @Component
 public class BookingMapper {
 
-    public BookingResponseDto mapToBookingView(Booking booking) {
+    public BookingResponseDto mapToBookingDto(Booking booking) {
         return BookingResponseDto.builder()
                 .id(booking.getId())
                 .start(booking.getStart())

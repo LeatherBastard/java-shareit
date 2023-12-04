@@ -70,7 +70,7 @@ public class BookingServiceImplTest {
         @Test
         void add_whenBookerNotFound_thenEntityNotFoundExceptionThrown() {
             BookingRequestDto bookingRequestDto = BookingRequestDto
-                    .builder().start(LocalDateTime.now()).end(LocalDateTime.now()).itemId(1).build();
+                    .builder().start(LocalDateTime.now().plusHours(1)).end(LocalDateTime.now().plusDays(1)).itemId(1).build();
             when(userRepository.findById(anyInt())).thenReturn(Optional.empty());
             assertThrows(EntityNotFoundException.class, () -> bookingService.add(1, bookingRequestDto));
             verify(userRepository, Mockito.times(1)).findById(1);
@@ -80,7 +80,7 @@ public class BookingServiceImplTest {
         @Test
         void add_whenItemNotFound_thenEntityNotFoundExceptionThrown() {
             BookingRequestDto bookingRequestDto = BookingRequestDto
-                    .builder().start(LocalDateTime.now()).end(LocalDateTime.now()).itemId(1).build();
+                    .builder().start(LocalDateTime.now().plusHours(1)).end(LocalDateTime.now().plusDays(1)).itemId(1).build();
             when(userRepository.findById(anyInt()))
                     .thenReturn(Optional.of(new User(1, "Mark", "kostrykinmark@gmail.com")));
             when(itemRepository.findById(anyInt())).thenReturn(Optional.empty());
@@ -94,7 +94,7 @@ public class BookingServiceImplTest {
         @Test
         void add_whenItemIsNotAvailable_thenItemUnavailableExceptionThrown() {
             BookingRequestDto bookingRequestDto = BookingRequestDto
-                    .builder().start(LocalDateTime.now()).end(LocalDateTime.now()).itemId(1).build();
+                    .builder().start(LocalDateTime.now().plusHours(1)).end(LocalDateTime.now().plusDays(1)).itemId(1).build();
             item.setAvailable(false);
             when(userRepository.findById(anyInt()))
                     .thenReturn(Optional.of(user));
@@ -109,7 +109,7 @@ public class BookingServiceImplTest {
         @Test
         void add_whenOwnerEqualsBooker_thenBookingOwnerEqualsBookerExceptionThrown() {
             BookingRequestDto bookingRequestDto = BookingRequestDto
-                    .builder().start(LocalDateTime.now()).end(LocalDateTime.now()).itemId(1).build();
+                    .builder().start(LocalDateTime.now().plusHours(1)).end(LocalDateTime.now().plusDays(1)).itemId(1).build();
             when(userRepository.findById(anyInt()))
                     .thenReturn(Optional.of(user));
             when(itemRepository.findById(anyInt())).thenReturn(Optional.of(item));
@@ -123,12 +123,7 @@ public class BookingServiceImplTest {
         void add_whenStartEqualsEnd_thenBookingDateValidationExceptionThrown() {
             BookingRequestDto bookingRequestDto = BookingRequestDto
                     .builder().start(LocalDateTime.now()).end(LocalDateTime.now()).itemId(1).build();
-            when(userRepository.findById(anyInt()))
-                    .thenReturn(Optional.of(anotherUser));
-            when(itemRepository.findById(anyInt())).thenReturn(Optional.of(item));
             assertThrows(BookingDateValidationException.class, () -> bookingService.add(2, bookingRequestDto));
-            verify(userRepository, Mockito.times(1)).findById(2);
-            verify(itemRepository, Mockito.times(1)).findById(1);
             verify(bookingRepository, Mockito.never()).save(any(Booking.class));
         }
 
@@ -136,12 +131,7 @@ public class BookingServiceImplTest {
         void add_whenStartBeforeCurrentDate_thenBookingDateValidationExceptionThrown() {
             BookingRequestDto bookingRequestDto = BookingRequestDto
                     .builder().start(LocalDateTime.now().minusHours(2)).end(LocalDateTime.now().plusDays(2)).itemId(1).build();
-            when(userRepository.findById(anyInt()))
-                    .thenReturn(Optional.of(anotherUser));
-            when(itemRepository.findById(anyInt())).thenReturn(Optional.of(item));
             assertThrows(BookingDateValidationException.class, () -> bookingService.add(2, bookingRequestDto));
-            verify(userRepository, Mockito.times(1)).findById(2);
-            verify(itemRepository, Mockito.times(1)).findById(1);
             verify(bookingRepository, Mockito.never()).save(any(Booking.class));
         }
 
@@ -149,12 +139,7 @@ public class BookingServiceImplTest {
         void add_whenEndBeforeCurrentDate_thenBookingDateValidationExceptionThrown() {
             BookingRequestDto bookingRequestDto = BookingRequestDto
                     .builder().start(LocalDateTime.now()).end(LocalDateTime.now().minusHours(2)).itemId(1).build();
-            when(userRepository.findById(anyInt()))
-                    .thenReturn(Optional.of(anotherUser));
-            when(itemRepository.findById(anyInt())).thenReturn(Optional.of(item));
             assertThrows(BookingDateValidationException.class, () -> bookingService.add(2, bookingRequestDto));
-            verify(userRepository, Mockito.times(1)).findById(2);
-            verify(itemRepository, Mockito.times(1)).findById(1);
             verify(bookingRepository, Mockito.never()).save(any(Booking.class));
         }
 
@@ -162,12 +147,7 @@ public class BookingServiceImplTest {
         void add_whenEndBeforeStart_thenBookingDateValidationExceptionThrown() {
             BookingRequestDto bookingRequestDto = BookingRequestDto
                     .builder().start(LocalDateTime.now().plusDays(2)).end(LocalDateTime.now().plusDays(1)).itemId(1).build();
-            when(userRepository.findById(anyInt()))
-                    .thenReturn(Optional.of(anotherUser));
-            when(itemRepository.findById(anyInt())).thenReturn(Optional.of(item));
             assertThrows(BookingDateValidationException.class, () -> bookingService.add(2, bookingRequestDto));
-            verify(userRepository, Mockito.times(1)).findById(2);
-            verify(itemRepository, Mockito.times(1)).findById(1);
             verify(bookingRepository, Mockito.never()).save(any(Booking.class));
         }
 
@@ -220,7 +200,7 @@ public class BookingServiceImplTest {
                     .booker(user).item(item).status(BookingStatus.WAITING).build();
             when(userRepository.findById(1)).thenReturn(Optional.of(user));
             when(bookingRepository.findById(1)).thenReturn(Optional.of(booking));
-            assertEquals(bookingMapper.mapToBookingView(booking), bookingService.getById(1, 1));
+            assertEquals(bookingMapper.mapToBookingDto(booking), bookingService.getById(1, 1));
         }
     }
 
@@ -301,7 +281,7 @@ public class BookingServiceImplTest {
             when(userRepository.findById(1)).thenReturn(Optional.of(user));
             when(itemRepository.findAllByOwner(user)).thenReturn(List.of(item));
             bookingService.getAllByItemsOwner(1, "ALL", 1, 1);
-            verify(bookingRepository, Mockito.atLeast(1)).findAllByItemId(1, 1, 1);
+            verify(bookingRepository, Mockito.atLeast(1)).findAllByOwnerItems(1, 1, 1);
         }
 
         @Test

@@ -6,6 +6,7 @@ import ru.practicum.shareit.booking.dto.BookingRequestDto;
 import ru.practicum.shareit.booking.dto.BookingResponseDto;
 import ru.practicum.shareit.booking.mapper.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
+import ru.practicum.shareit.booking.model.BookingSelectionState;
 import ru.practicum.shareit.booking.model.BookingStatus;
 import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.exception.*;
@@ -15,6 +16,7 @@ import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -52,20 +54,6 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public BookingResponseDto add(int bookerId, BookingRequestDto bookingRequestDto) {
-        Optional<User> optionalBooker = userRepository.findById(bookerId);
-        if (optionalBooker.isEmpty())
-            throw new EntityNotFoundException(USER_NOT_FOUND_MESSAGE, bookerId);
-        Optional<Item> optionalItem = itemRepository.findById(bookingRequestDto.getItemId());
-        if (optionalItem.isEmpty())
-            throw new EntityNotFoundException(ITEM_NOT_FOUND_MESSAGE, bookingRequestDto.getItemId());
-        Item item = optionalItem.get();
-        if (!item.getAvailable()) {
-            throw new ItemUnavailableException(ITEM_NOT_AVAILABLE_MESSAGE, item.getId());
-        }
-
-        if (optionalItem.get().getOwner().getId().equals(bookerId))
-            throw new BookingOwnerEqualsBookerException(BOOKING_OWNER_EQUALS_BOOKER_MESSAGE);
-
         if (bookingRequestDto.getStart().equals(bookingRequestDto.getEnd())) {
             throw new BookingDateValidationException(START_DATE_EQUALS_END_DATE_MESSAGE);
         }
@@ -79,11 +67,24 @@ public class BookingServiceImpl implements BookingService {
             throw new BookingDateValidationException(END_DATE_BEFORE_START_DATE_MESSAGE);
         }
 
+        Optional<User> optionalBooker = userRepository.findById(bookerId);
+        if (optionalBooker.isEmpty())
+            throw new EntityNotFoundException(USER_NOT_FOUND_MESSAGE, bookerId);
+        Optional<Item> optionalItem = itemRepository.findById(bookingRequestDto.getItemId());
+        if (optionalItem.isEmpty())
+            throw new EntityNotFoundException(ITEM_NOT_FOUND_MESSAGE, bookingRequestDto.getItemId());
+        Item item = optionalItem.get();
+        if (!item.getAvailable()) {
+            throw new ItemUnavailableException(ITEM_NOT_AVAILABLE_MESSAGE, item.getId());
+        }
+        if (optionalItem.get().getOwner().getId().equals(bookerId))
+            throw new BookingOwnerEqualsBookerException(BOOKING_OWNER_EQUALS_BOOKER_MESSAGE);
+
         Booking booking = mapper.mapToBooking(bookingRequestDto);
         booking.setItem(optionalItem.get());
         booking.setBooker(optionalBooker.get());
         booking.setStatus(BookingStatus.WAITING);
-        return mapper.mapToBookingView(bookingRepository.save(booking));
+        return mapper.mapToBookingDto(bookingRepository.save(booking));
     }
 
     @Override
@@ -91,7 +92,6 @@ public class BookingServiceImpl implements BookingService {
         Optional<User> optionalUser = userRepository.findById(userId);
         if (optionalUser.isEmpty())
             throw new EntityNotFoundException(USER_NOT_FOUND_MESSAGE, userId);
-
 
         Optional<Booking> optionalBooking = bookingRepository.findById(bookingId);
         if (optionalBooking.isEmpty())
@@ -103,7 +103,7 @@ public class BookingServiceImpl implements BookingService {
         if (!isUserIdEqualsBookerOrItemOwnerId)
             throw new WrongOwnerOrBookerException(WRONG_OWNER_OR_BOOKER_MESSAGE);
 
-        return mapper.mapToBookingView(optionalBooking.get());
+        return mapper.mapToBookingDto(optionalBooking.get());
     }
 
 
@@ -117,34 +117,38 @@ public class BookingServiceImpl implements BookingService {
         if (optionalBooker.isEmpty())
             throw new EntityNotFoundException(USER_NOT_FOUND_MESSAGE, bookerId);
 
-        List<Booking> result;
-        switch (state) {
-            case "ALL":
+        List<Booking> result = new ArrayList<>();
+        BookingSelectionState selectionState;
+        try {
+            selectionState = BookingSelectionState.valueOf(state);
+        } catch (IllegalArgumentException exception) {
+            throw new UnsupportedStatusException(STATUS_NOT_SUPPORTED_MESSAGE, state);
+        }
+        switch (selectionState) {
+            case ALL:
                 result = bookingRepository
                         .findAllByUser(bookerId, from, size);
                 break;
-            case "CURRENT":
+            case CURRENT:
                 result = bookingRepository
                         .findAllCurrentBookingsByUser(bookerId, from, size);
                 break;
-            case "PAST":
+            case PAST:
                 result = bookingRepository
                         .findAllPastBookingsByUser(bookerId, from, size);
                 break;
-            case "FUTURE":
+            case FUTURE:
                 result = bookingRepository
                         .findAllFutureBookingsByUser(bookerId, from, size);
                 break;
-            case "WAITING":
-            case "REJECTED":
+            case WAITING:
+            case REJECTED:
                 result = bookingRepository
-                        .findAllByUserAndStatus(bookerId, state, from, size);
+                        .findAllByUserAndStatus(bookerId, selectionState.name(), from, size);
                 break;
-            default:
-                throw new UnsupportedStatusException(STATUS_NOT_SUPPORTED_MESSAGE, state);
         }
 
-        return result.stream().map(mapper::mapToBookingView)
+        return result.stream().map(mapper::mapToBookingDto)
                 .collect(Collectors.toList());
     }
 
@@ -160,38 +164,43 @@ public class BookingServiceImpl implements BookingService {
 
         List<Item> userItems = itemRepository.findAllByOwner(optionalUser.get());
 
-        List<Booking> result;
-        switch (state) {
-            case "ALL":
+        List<Booking> result = new ArrayList<>();
+        BookingSelectionState selectionState;
+        try {
+            selectionState = BookingSelectionState.valueOf(state);
+        } catch (IllegalArgumentException exception) {
+            throw new UnsupportedStatusException(STATUS_NOT_SUPPORTED_MESSAGE, state);
+        }
+
+        switch (selectionState) {
+            case ALL:
                 result = userItems.stream()
                         .map(item -> bookingRepository.findAllByItemId(item.getId(), from, size))
                         .flatMap(Collection::stream).collect(Collectors.toList());
                 break;
-            case "CURRENT":
+            case CURRENT:
                 result = userItems.stream()
                         .map(item -> bookingRepository.findAllCurrentBookingsByItem(item.getId(), from, size))
                         .flatMap(Collection::stream).collect(Collectors.toList());
                 break;
-            case "PAST":
+            case PAST:
                 result = userItems.stream()
                         .map(item -> bookingRepository.findAllPastBookingsByItem(item.getId(), from, size))
                         .flatMap(Collection::stream).collect(Collectors.toList());
                 break;
-            case "FUTURE":
+            case FUTURE:
                 result = userItems.stream()
                         .map(item -> bookingRepository.findAllFutureBookingsByItem(item.getId(), from, size))
                         .flatMap(Collection::stream).collect(Collectors.toList());
                 break;
-            case "WAITING":
-            case "REJECTED":
+            case WAITING:
+            case REJECTED:
                 result = userItems.stream()
-                        .map(item -> bookingRepository.findAllByItemIdAndStatus(item.getId(), state, from, size))
+                        .map(item -> bookingRepository.findAllByItemIdAndStatus(item.getId(), selectionState.name(), from, size))
                         .flatMap(Collection::stream).collect(Collectors.toList());
                 break;
-            default:
-                throw new UnsupportedStatusException(STATUS_NOT_SUPPORTED_MESSAGE, state);
         }
-        return result.stream().map(mapper::mapToBookingView)
+        return result.stream().map(mapper::mapToBookingDto)
                 .collect(Collectors.toList());
     }
 
@@ -220,6 +229,6 @@ public class BookingServiceImpl implements BookingService {
         } else {
             oldBooking.setStatus(BookingStatus.REJECTED);
         }
-        return mapper.mapToBookingView(bookingRepository.save(oldBooking));
+        return mapper.mapToBookingDto(bookingRepository.save(oldBooking));
     }
 }

@@ -2,7 +2,6 @@ package ru.practicum.shareit.booking.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 import org.springframework.data.repository.query.Param;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.BookingStatus;
@@ -11,7 +10,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-public interface BookingRepository extends JpaRepository<Booking, Integer>, QuerydslPredicateExecutor<Booking> {
+public interface BookingRepository extends JpaRepository<Booking, Integer> {
 
 
     List<Booking> findAllByBooker_IdAndItem_IdAndStatusAndEndIsBefore(int bookerId, int itemId, BookingStatus status, LocalDateTime end);
@@ -111,4 +110,42 @@ public interface BookingRepository extends JpaRepository<Booking, Integer>, Quer
     List<Booking> findAllPastBookingsByItem(@Param("itemId") int itemId, @Param("from") int from, @Param("size") int size);
 
 
+    @Query(value = "select * " +
+            "from bookings as bk " +
+            "where bk.item_id IN (SELECT item_id from items AS i WHERE i.user_id= :userId) " +
+            "ORDER BY bk.start_date DESC " +
+            "LIMIT :size OFFSET :from ", nativeQuery = true)
+    List<Booking> findAllByOwnerItems(@Param("userId") int userId, @Param("from") int from, @Param("size") int size);
+
+    @Query(value = "select * " +
+            "from bookings as bk " +
+            "where bk.item_id IN (SELECT item_id from items AS i WHERE i.user_id= :userId) " +
+            "AND CAST(bk.start_date AS DATE) >= CURRENT_DATE " +
+            "ORDER BY bk.start_date DESC " +
+            "LIMIT :size OFFSET :from ", nativeQuery = true)
+    List<Booking> findAllFutureBookingsByOwnerItems(@Param("userId") int userId, @Param("from") int from, @Param("size") int size);
+
+    @Query(value = "select * " +
+            "from bookings as bk " +
+            "where bk.item_id IN (SELECT item_id from items AS i WHERE i.user_id= :userId) " +
+            "AND bk.start_date <= CURRENT_TIMESTAMP AND bk.end_date > CURRENT_TIMESTAMP " +
+            "ORDER BY bk.start_date DESC " +
+            "LIMIT :size OFFSET :from ", nativeQuery = true)
+    List<Booking> findAllCurrentBookingsByOwnerItems(@Param("userId") int userId, @Param("from") int from, @Param("size") int size);
+
+    @Query(value = "select * " +
+            "from bookings as bk " +
+            "where bk.item_id IN (SELECT item_id from items AS i WHERE i.user_id= :userId) " +
+            "AND bk.end_date < CURRENT_TIMESTAMP " +
+            "ORDER BY bk.start_date DESC " +
+            "LIMIT :size OFFSET :from ", nativeQuery = true)
+    List<Booking> findAllPastBookingsByOwnerItems(@Param("userId") int userId, @Param("from") int from, @Param("size") int size);
+
+    @Query(value = "select * " +
+            "from bookings as bk " +
+            "where bk.item_id IN (SELECT item_id from items AS i WHERE i.user_id= :userId) " +
+            "AND AND bk.status=:status " +
+            "ORDER BY bk.start_date DESC " +
+            "LIMIT :size OFFSET :from ", nativeQuery = true)
+    List<Booking> findAllBookingsByOwnerItemsAndStatus(@Param("userId") int userId, @Param("status") String status, @Param("from") int from, @Param("size") int size);
 }

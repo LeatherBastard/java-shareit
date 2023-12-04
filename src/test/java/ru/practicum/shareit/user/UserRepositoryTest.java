@@ -5,13 +5,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import ru.practicum.shareit.user.repository.UserRepository;
 
-import javax.transaction.Transactional;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-@Transactional
+
 @DataJpaTest
-public class UserRepositoryTest {
+ class UserRepositoryTest {
     @Autowired
     private UserRepository userRepository;
 
