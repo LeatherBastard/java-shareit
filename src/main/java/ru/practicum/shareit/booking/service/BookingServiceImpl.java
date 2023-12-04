@@ -17,7 +17,6 @@ import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -162,7 +161,6 @@ public class BookingServiceImpl implements BookingService {
         if (optionalUser.isEmpty())
             throw new EntityNotFoundException(USER_NOT_FOUND_MESSAGE, userId);
 
-        List<Item> userItems = itemRepository.findAllByOwner(optionalUser.get());
 
         List<Booking> result = new ArrayList<>();
         BookingSelectionState selectionState;
@@ -174,30 +172,20 @@ public class BookingServiceImpl implements BookingService {
 
         switch (selectionState) {
             case ALL:
-                result = userItems.stream()
-                        .map(item -> bookingRepository.findAllByItemId(item.getId(), from, size))
-                        .flatMap(Collection::stream).collect(Collectors.toList());
+                result = bookingRepository.findAllByOwnerItems(userId, from, size);
                 break;
             case CURRENT:
-                result = userItems.stream()
-                        .map(item -> bookingRepository.findAllCurrentBookingsByItem(item.getId(), from, size))
-                        .flatMap(Collection::stream).collect(Collectors.toList());
+                result = bookingRepository.findAllCurrentBookingsByOwnerItems(userId, from, size);
                 break;
             case PAST:
-                result = userItems.stream()
-                        .map(item -> bookingRepository.findAllPastBookingsByItem(item.getId(), from, size))
-                        .flatMap(Collection::stream).collect(Collectors.toList());
+                result = bookingRepository.findAllPastBookingsByOwnerItems(userId, from, size);
                 break;
             case FUTURE:
-                result = userItems.stream()
-                        .map(item -> bookingRepository.findAllFutureBookingsByItem(item.getId(), from, size))
-                        .flatMap(Collection::stream).collect(Collectors.toList());
+                result = bookingRepository.findAllFutureBookingsByOwnerItems(userId, from, size);
                 break;
             case WAITING:
             case REJECTED:
-                result = userItems.stream()
-                        .map(item -> bookingRepository.findAllByItemIdAndStatus(item.getId(), selectionState.name(), from, size))
-                        .flatMap(Collection::stream).collect(Collectors.toList());
+                result = bookingRepository.findAllBookingsByOwnerItemsAndStatus(userId, state, from, size);
                 break;
         }
         return result.stream().map(mapper::mapToBookingDto)

@@ -122,9 +122,9 @@ class BookingRepositoryTest {
     }
 
     @Test
-    void findAllByItemIdAndStatus() {
-        List<Booking> bookings = bookingRepository.findAllByItemIdAndStatus(secondItem.getId(), "APPROVED", 0, 2);
-        assertEquals(1, bookings.size());
+    void findAllBookingsByOwnerItemsAndStatus() {
+        List<Booking> bookings = bookingRepository.findAllBookingsByOwnerItemsAndStatus(firstUser.getId(), "APPROVED", 0, 2);
+        assertEquals(2, bookings.size());
         assertEquals(thirdBooking, bookings.get(0));
     }
 
@@ -151,22 +151,22 @@ class BookingRepositoryTest {
     }
 
     @Test
-    void findAllFutureBookingsByItem() {
-        List<Booking> bookings = bookingRepository.findAllFutureBookingsByItem(secondItem.getId(), 0, 2);
-        assertEquals(1, bookings.size());
+    void findAllFutureBookingsByOwnerItems() {
+        List<Booking> bookings = bookingRepository.findAllFutureBookingsByOwnerItems(firstUser.getId(), 0, 2);
+        assertEquals(2, bookings.size());
         assertEquals(thirdBooking, bookings.get(0));
     }
 
     @Test
-    void findAllCurrentBookingsByItem() {
-        List<Booking> bookings = bookingRepository.findAllCurrentBookingsByItem(secondItem.getId(), 0, 2);
+    void findAllCurrentBookingsByOwnerItems() {
+        List<Booking> bookings = bookingRepository.findAllCurrentBookingsByOwnerItems(firstUser.getId(), 0, 2);
         assertEquals(1, bookings.size());
         assertEquals(fourthBooking, bookings.get(0));
     }
 
     @Test
-    void findAllPastBookingsByItem() {
-        List<Booking> bookings = bookingRepository.findAllPastBookingsByItem(firstItem.getId(), 0, 3);
+    void findAllPastBookingsByOwnerItems() {
+        List<Booking> bookings = bookingRepository.findAllPastBookingsByOwnerItems(firstUser.getId(), 0, 3);
         assertEquals(1, bookings.size());
         assertEquals(secondBooking, bookings.get(0));
     }

@@ -24,7 +24,6 @@ import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -279,7 +278,6 @@ public class BookingServiceImplTest {
         @Test
         void getAllByItemsOwner_whenStateIsAll_thenFindAllByItemId() {
             when(userRepository.findById(1)).thenReturn(Optional.of(user));
-            when(itemRepository.findAllByOwner(user)).thenReturn(List.of(item));
             bookingService.getAllByItemsOwner(1, "ALL", 1, 1);
             verify(bookingRepository, Mockito.atLeast(1)).findAllByOwnerItems(1, 1, 1);
         }
@@ -287,40 +285,35 @@ public class BookingServiceImplTest {
         @Test
         void getAllByItemsOwner_whenStateIsCurrent_thenFindAllCurrentBookingsByItemId() {
             when(userRepository.findById(1)).thenReturn(Optional.of(user));
-            when(itemRepository.findAllByOwner(user)).thenReturn(List.of(item));
             bookingService.getAllByItemsOwner(1, "CURRENT", 1, 1);
-            verify(bookingRepository, Mockito.atLeast(1)).findAllCurrentBookingsByItem(1, 1, 1);
+            verify(bookingRepository, Mockito.atLeast(1)).findAllCurrentBookingsByOwnerItems(1, 1, 1);
         }
 
         @Test
         void getAllByItemsOwner_whenStateIsPast_thenFindAllPastBookingsByItemId() {
             when(userRepository.findById(1)).thenReturn(Optional.of(user));
-            when(itemRepository.findAllByOwner(user)).thenReturn(List.of(item));
             bookingService.getAllByItemsOwner(1, "PAST", 1, 1);
-            verify(bookingRepository, Mockito.atLeast(1)).findAllPastBookingsByItem(1, 1, 1);
+            verify(bookingRepository, Mockito.atLeast(1)).findAllPastBookingsByOwnerItems(1, 1, 1);
         }
 
         @Test
         void getAllByItemsOwner_whenStateIsFuture_thenFindAllFutureBookingsByItemId() {
             when(userRepository.findById(1)).thenReturn(Optional.of(user));
-            when(itemRepository.findAllByOwner(user)).thenReturn(List.of(item));
             bookingService.getAllByItemsOwner(1, "FUTURE", 1, 1);
-            verify(bookingRepository, Mockito.atLeast(1)).findAllFutureBookingsByItem(1, 1, 1);
+            verify(bookingRepository, Mockito.atLeast(1)).findAllFutureBookingsByOwnerItems(1, 1, 1);
         }
 
         @Test
         void getAllByItemsOwner_whenStateIsWaitingOrRejected_thenFindAllByItemIdAndStatus() {
             when(userRepository.findById(1)).thenReturn(Optional.of(user));
-            when(itemRepository.findAllByOwner(user)).thenReturn(List.of(item));
             bookingService.getAllByItemsOwner(1, "WAITING", 1, 1);
-            verify(bookingRepository, Mockito.atLeast(1)).findAllByItemIdAndStatus(1, "WAITING", 1, 1);
+            verify(bookingRepository, Mockito.atLeast(1)).findAllBookingsByOwnerItemsAndStatus(1, "WAITING", 1, 1);
         }
 
 
         @Test
         void getAllByItemsOwner_whenStateIsInvalid_thenUnsupportedStatusExceptionThrown() {
             when(userRepository.findById(1)).thenReturn(Optional.of(user));
-            when(itemRepository.findAllByOwner(user)).thenReturn(List.of(item));
             assertThrows(UnsupportedStatusException.class, () -> bookingService.getAllByItemsOwner(1, "ABC", 1, 1));
         }
     }
