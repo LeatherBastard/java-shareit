@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Transactional
 @DataJpaTest
- class CommentRepositoryTest {
+class CommentRepositoryTest {
     @Autowired
     private ItemRepository itemRepository;
     @Autowired
