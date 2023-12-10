@@ -11,14 +11,26 @@ import java.util.List;
 
 @Component
 public interface ItemRepository extends JpaRepository<Item, Integer> {
+
+    @Query(
+            value = "select * " +
+                    "from items AS i " +
+                    "where i.user_id=:userId " +
+                    "LIMIT :size OFFSET :from",
+            nativeQuery = true)
+    List<Item> findAllByOwnerFromAndLimit(@Param("userId") int userId, @Param("from") int from, @Param("size") int size);
+
     List<Item> findAllByOwner(User owner);
+
+    List<Item> findAllByRequest_Id(int requestId);
 
     @Query(
             value = "select * " +
                     "from items " +
                     "where (lower(name) ilike %:text% " +
                     "OR lower(description) ilike %:text%) " +
-                    "AND available=true",
+                    "AND available=true " +
+                    "LIMIT :size OFFSET :from",
             nativeQuery = true)
-    List<Item> findAllByText(@Param("text") String text);
+    List<Item> findAllByText(@Param("text") String text, @Param("from") int from, @Param("size") int size);
 }

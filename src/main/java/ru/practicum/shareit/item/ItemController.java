@@ -5,8 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.item.dto.CommentRequestDto;
 import ru.practicum.shareit.item.dto.CommentResponseDto;
-import ru.practicum.shareit.item.dto.ItemResponseDto;
 import ru.practicum.shareit.item.dto.ItemRequestDto;
+import ru.practicum.shareit.item.dto.ItemResponseDto;
 import ru.practicum.shareit.item.service.ItemService;
 
 import javax.validation.Valid;
@@ -29,24 +29,6 @@ public class ItemController {
     private static final String USER_ID_REQUEST_HEADER = "X-Sharer-User-Id";
     private final ItemService itemService;
 
-    @GetMapping
-    public List<ItemResponseDto> getAllByOwner(@RequestHeader(USER_ID_REQUEST_HEADER) int userId) {
-        log.info(LOGGER_GET_ITEMS_BY_OWNER_MESSAGE);
-        return itemService.getAllByOwner(userId);
-    }
-
-    @GetMapping("search")
-    public List<ItemRequestDto> getAllByText(@RequestParam String text) {
-        log.info(LOGGER_GET_ITEMS_BY_TEXT_MESSAGE);
-        return itemService.getAllByText(text);
-    }
-
-    @GetMapping("/{id}")
-    public ItemResponseDto getItem(@RequestHeader(USER_ID_REQUEST_HEADER) int userId, @PathVariable("id") int itemId) {
-        log.info(LOGGER_GET_ITEM_BY_ID_MESSAGE, itemId);
-        return itemService.getById(userId, itemId);
-    }
-
     @PostMapping
     public ItemRequestDto addItem(@RequestHeader(USER_ID_REQUEST_HEADER) int userId, @Valid @RequestBody ItemRequestDto itemRequestDto) {
         log.info(LOGGER_ADD_ITEM_MESSAGE);
@@ -57,7 +39,24 @@ public class ItemController {
     public CommentResponseDto addComment(@RequestHeader(USER_ID_REQUEST_HEADER) int userId, @PathVariable int itemId, @Valid @RequestBody CommentRequestDto commentRequestDto) {
         log.info(LOGGER_ADD_COMMENT_MESSAGE);
         return itemService.addComment(userId, itemId, commentRequestDto);
+    }
 
+    @GetMapping
+    public List<ItemResponseDto> getAllByOwner(@RequestHeader(USER_ID_REQUEST_HEADER) int userId, @RequestParam(defaultValue = "0") int from, @RequestParam(defaultValue = "20") int size) {
+        log.info(LOGGER_GET_ITEMS_BY_OWNER_MESSAGE);
+        return itemService.getAllByOwner(userId, from, size);
+    }
+
+    @GetMapping("search")
+    public List<ItemRequestDto> getAllByText(@RequestParam String text, @RequestParam(defaultValue = "0") int from, @RequestParam(defaultValue = "20") int size) {
+        log.info(LOGGER_GET_ITEMS_BY_TEXT_MESSAGE);
+        return itemService.getAllByText(text, from, size);
+    }
+
+    @GetMapping("/{id}")
+    public ItemResponseDto getItem(@RequestHeader(USER_ID_REQUEST_HEADER) int userId, @PathVariable("id") int itemId) {
+        log.info(LOGGER_GET_ITEM_BY_ID_MESSAGE, itemId);
+        return itemService.getById(userId, itemId);
     }
 
     @PatchMapping("/{id}")

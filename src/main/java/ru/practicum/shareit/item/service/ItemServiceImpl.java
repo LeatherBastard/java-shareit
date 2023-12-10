@@ -8,16 +8,19 @@ import ru.practicum.shareit.booking.model.BookingStatus;
 import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.exception.BookingForCommentNotFoundException;
 import ru.practicum.shareit.exception.EntityNotFoundException;
+import ru.practicum.shareit.exception.PaginationBoundariesException;
 import ru.practicum.shareit.exception.WrongOwnerOrBookerException;
 import ru.practicum.shareit.item.dto.CommentRequestDto;
 import ru.practicum.shareit.item.dto.CommentResponseDto;
-import ru.practicum.shareit.item.dto.ItemResponseDto;
 import ru.practicum.shareit.item.dto.ItemRequestDto;
+import ru.practicum.shareit.item.dto.ItemResponseDto;
 import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.CommentRepository;
 import ru.practicum.shareit.item.repository.ItemRepository;
+import ru.practicum.shareit.request.model.ItemRequest;
+import ru.practicum.shareit.request.repository.ItemRequestRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
@@ -27,6 +30,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static ru.practicum.shareit.request.service.ItemRequestServiceImpl.ITEM_REQUEST_NOT_FOUND_MESSAGE;
 import static ru.practicum.shareit.user.service.UserServiceImpl.USER_NOT_FOUND_MESSAGE;
 
 @Service
@@ -41,6 +45,7 @@ public class ItemServiceImpl implements ItemService {
     private final UserRepository userRepository;
     private final CommentRepository commentRepository;
     private final BookingRepository bookingRepository;
+    private final ItemRequestRepository itemRequestRepository;
     private final ItemMapper itemMapper;
     private final BookingMapper bookingMapper;
 
@@ -51,11 +56,16 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public List<ItemResponseDto> getAllByOwner(int ownerId) {
+    public List<ItemResponseDto> getAllByOwner(int ownerId, int from, int size) {
+        if (from < 0 || size <= 0) {
+            throw new PaginationBoundariesException(from, size);
+        }
         Optional<User> optionalUser = userRepository.findById(ownerId);
         if (optionalUser.isEmpty())
             throw new EntityNotFoundException(USER_NOT_FOUND_MESSAGE, ownerId);
-        List<Item> ownerItems = itemRepository.findAllByOwner(optionalUser.get());
+
+        List<Item> ownerItems = itemRepository.findAllByOwnerFromAndLimit(ownerId, from, size);
+
         List<ItemResponseDto> items = ownerItems.stream()
                 .map(this::setBookingDatesToItem).collect(Collectors.toList());
         items.forEach(item ->
@@ -70,10 +80,20 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public List<ItemRequestDto> getAllByText(String text) {
+    public List<ItemRequestDto> getAllByText(String text, int from, int size) {
+
+        if (from < 0 || size <= 0) {
+            throw new PaginationBoundariesException(from, size);
+        }
         if (text.isEmpty())
             return new ArrayList<>();
-        return itemRepository.findAllByText(text).stream().map(itemMapper::mapToItemDto).collect(Collectors.toList());
+
+        List<Item> itemsByText = itemRepository.findAllByText(text, from, size);
+
+        return itemsByText
+                .stream()
+                .map(itemMapper::mapToItemDto)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -105,6 +125,14 @@ public class ItemServiceImpl implements ItemService {
             throw new EntityNotFoundException(USER_NOT_FOUND_MESSAGE, ownerId);
         Item item = itemMapper.mapToItem(itemRequestDto);
         item.setOwner(optionalUser.get());
+        if (itemRequestDto.getRequestId() != null) {
+            int requestId = itemRequestDto.getRequestId();
+            Optional<ItemRequest> optionalItemRequest = itemRequestRepository.findById(requestId);
+            if (optionalItemRequest.isEmpty())
+                throw new EntityNotFoundException(ITEM_REQUEST_NOT_FOUND_MESSAGE, requestId);
+            item.setRequest(optionalItemRequest.get());
+        }
+
         return itemMapper.mapToItemDto(itemRepository.save(item));
     }
 
