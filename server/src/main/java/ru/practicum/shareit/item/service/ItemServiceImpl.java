@@ -25,6 +25,7 @@ import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -72,7 +73,7 @@ public class ItemServiceImpl implements ItemService {
                         .collect(Collectors.toSet())
                 )
         );
-        return items;
+        return items.stream().sorted(Comparator.comparing(item -> item.getId())).collect(Collectors.toList());
     }
 
     @Override
