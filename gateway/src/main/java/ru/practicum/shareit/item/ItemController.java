@@ -10,10 +10,13 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.exception.PaginationBoundariesException;
 import ru.practicum.shareit.item.dto.CommentRequestDto;
 import ru.practicum.shareit.item.dto.ItemRequestDto;
+import ru.practicum.shareit.item.validator.AddItemValidator;
+import ru.practicum.shareit.item.validator.UpdateItemValidator;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
+
 
 @Controller
 @RequestMapping(path = "/items")
@@ -32,7 +35,7 @@ public class ItemController {
     private final ItemClient itemClient;
 
     @PostMapping
-    public ResponseEntity<Object> addItem(@RequestHeader(USER_ID_REQUEST_HEADER) int userId, @Valid @RequestBody ItemRequestDto itemRequestDto) {
+    public ResponseEntity<Object> addItem(@RequestHeader(USER_ID_REQUEST_HEADER) int userId, @Validated(AddItemValidator.class) @RequestBody ItemRequestDto itemRequestDto) {
         log.info(LOGGER_ADD_ITEM_MESSAGE);
         return itemClient.addItem(userId, itemRequestDto);
     }
@@ -67,7 +70,7 @@ public class ItemController {
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<Object> updateItem(@RequestHeader(USER_ID_REQUEST_HEADER) int userId, @PathVariable("id") int itemId, @RequestBody ItemRequestDto itemRequestDto) {
+    public ResponseEntity<Object> updateItem(@RequestHeader(USER_ID_REQUEST_HEADER) int userId, @PathVariable("id") int itemId, @Validated(UpdateItemValidator.class) @RequestBody ItemRequestDto itemRequestDto) {
         log.info(LOGGER_UPDATE_ITEM_MESSAGE, itemId);
         return itemClient.updateItem(userId, itemId, itemRequestDto);
     }
